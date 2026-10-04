@@ -10,8 +10,6 @@ object FacultativeSchedules {
     const val PSYCHOLOGY_KEY = "PSIHOLOGIA_EDUCATIEI"
     const val FRENCH_KEY = "FRANCEZA"
 
-    private const val ALL_COURSES = "ALL"
-
     fun isPsychologyEnabled(preferences: SharedPreferences, series: String): Boolean =
         preferences.getBoolean("facultative_${series}_psychology", false)
 
@@ -30,20 +28,6 @@ object FacultativeSchedules {
             .apply()
     }
 
-    fun psychologyCourseSelection(preferences: SharedPreferences, series: String): String =
-        preferences.getString("facultative_${series}_psychology_course", ALL_COURSES)
-            .orEmpty()
-            .ifBlank { ALL_COURSES }
-
-    fun setPsychologyCourseSelection(
-        preferences: SharedPreferences,
-        series: String,
-        selection: String,
-    ) {
-        preferences.edit()
-            .putString("facultative_${series}_psychology_course", selection.ifBlank { ALL_COURSES })
-            .apply()
-    }
 
     fun courseKey(slot: ScheduleSlot): String =
         "${slot.day}|${slot.startHour}|${slot.endHour}"
@@ -54,9 +38,7 @@ object FacultativeSchedules {
         info: FacultativeScheduleParser.Info,
     ): List<ScheduleSlot> {
         if (!isPsychologyEnabled(preferences, series)) return emptyList()
-        val selection = psychologyCourseSelection(preferences, series)
-        if (selection == ALL_COURSES) return info.psychologyCourses
-        return info.psychologyCourses.filter { courseKey(it) == selection }
+        return info.psychologyCourses
     }
 
     fun manualSlots(
