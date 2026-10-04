@@ -52,6 +52,21 @@ Codul `IFC` întâlnit în grila seriei CC este tratat ca alias pentru `IFR`, nu
 
 Pentru disciplinele unde legenda spune că seminarul **se stabilește la curs**, aplicația permite configurarea manuală a seminarului după ce studentul află repartizarea: zi, interval, săptămână pară/impară și sală. Seminarul configurat este folosit și pentru notificări.
 
+În seriile AA, AB și AC, nota oficială mai precizează că laboratoarele opționale de **IA2** și **GAC** se stabilesc la curs. Dacă studentul selectează una dintre aceste discipline, poate adăuga manual laboratorul în același mod.
+
+## Facultative
+
+În toate seriile scanate apare **Psihologia educației** ca disciplină facultativă, cu două intervale de curs menționate în notă:
+
+- luni 12:00–14:00, CantiCTI;
+- joi 10:00–12:00, A04 Leu.
+
+Fișierul nu precizează repartizarea studenților între cele două intervale, așa că aplicația poate afișa ambele sau poate fi configurată să păstreze doar unul. Seminarul de Psihologia educației se stabilește la curs și poate fi adăugat manual.
+
+Tot în notă apare **Franceză — seminar facultativ**, cu program stabilit cu profesorul. Poate fi selectată și configurată manual în aplicație.
+
+Pentru seriile AA, AB și AC, fișierul mai precizează că **orarul pentru Educație fizică se găsește la sala de sport**. Orele din grilă sunt păstrate, dar aplicația afișează și această avertizare.
+
 ## Par / impar
 
 Pentru anul universitar 2026–2027:
