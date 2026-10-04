@@ -40,7 +40,7 @@ Pentru fiecare astfel de disciplină poți alege:
 
 Activitățile comune întregii grupe rămân întotdeauna vizibile. Alegerea unei subgrupe la o materie nu afectează celelalte materii, iar notificările folosesc aceleași selecții.
 
-Dacă o disciplină apare într-o singură coloană de subgrupă, selectorul folosește tot numărul complet de subgrupe al grupei. De exemplu, la 311 AB, IA1 poate apărea vizual într-o singură coloană, dar selectorul oferă atât Subgrupa 1, cât și Subgrupa 2. Cursurile opționale rămân vizibile indiferent de această alegere dacă poziția lor în grilă este doar un artefact de layout.
+Dacă o disciplină apare într-o singură coloană de subgrupă, selectorul folosește tot numărul complet de subgrupe al grupei. De exemplu, la 311 AB, IA1 apare la marți 18–20 pe Subgrupa 1, iar ISO apare pe Subgrupa 2 în săptămâna pară. Selectorul oferă SG1 și SG2, iar filtrarea respectă poziția reală a fiecărei activități din grilă.
 
 ## Opționale CTI (seriile C)
 
