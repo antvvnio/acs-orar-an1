@@ -224,7 +224,7 @@ class MainActivity : AppCompatActivity() {
                 isCheckable = true
                 isClickable = true
                 chipMinHeight = dp(42).toFloat()
-                chipCornerRadius = dp(15).toFloat()
+                chipCornerRadius = dp(8).toFloat()
                 chipStrokeWidth = dp(1).toFloat()
                 chipStrokeColor = ColorStateList.valueOf(color(R.color.outline))
                 chipBackgroundColor = ContextCompat.getColorStateList(context, R.color.day_chip_background)
@@ -462,7 +462,7 @@ class MainActivity : AppCompatActivity() {
                 setPadding(dp(12), dp(8), dp(12), dp(10))
                 background = GradientDrawable().apply {
                     shape = GradientDrawable.RECTANGLE
-                    cornerRadius = dp(16).toFloat()
+                    cornerRadius = dp(8).toFloat()
                     setColor(color(R.color.surface_variant))
                 }
                 layoutParams = LinearLayout.LayoutParams(
@@ -535,7 +535,7 @@ class MainActivity : AppCompatActivity() {
             setPadding(dp(12), dp(10), dp(12), dp(12))
             background = GradientDrawable().apply {
                 shape = GradientDrawable.RECTANGLE
-                cornerRadius = dp(16).toFloat()
+                cornerRadius = dp(8).toFloat()
                 setColor(color(R.color.surface_variant))
             }
             layoutParams = LinearLayout.LayoutParams(
@@ -929,9 +929,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun slotCard(slot: ScheduleSlot, catalog: SubjectCatalog): MaterialCardView {
         val card = MaterialCardView(this).apply {
-            radius = dp(24).toFloat()
-            cardElevation = dp(1).toFloat()
-            strokeWidth = 0
+            radius = dp(8).toFloat()
+            cardElevation = 0f
+            strokeWidth = dp(1)
+            strokeColor = color(R.color.outline)
             setCardBackgroundColor(color(R.color.surface))
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -1083,7 +1084,7 @@ class MainActivity : AppCompatActivity() {
             setPadding(dp(8), dp(4), dp(8), dp(4))
             background = GradientDrawable().apply {
                 shape = GradientDrawable.RECTANGLE
-                cornerRadius = dp(99).toFloat()
+                cornerRadius = dp(6).toFloat()
                 setColor(color(backgroundRes))
             }
             layoutParams = LinearLayout.LayoutParams(
