@@ -27,17 +27,17 @@ jobs:
         run: gradle :app:assembleDebug
 
       - name: Prepare release APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk ACS-Orar-v1.9.6-debug.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk ACS-Orar-v1.9.7-debug.apk
 
-      - name: Publish v1.9.6
+      - name: Publish v1.9.7
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if gh release view v1.9.6 >/dev/null 2>&1; then
-            gh release upload v1.9.6 ACS-Orar-v1.9.6-debug.apk --clobber
+          if gh release view v1.9.7 >/dev/null 2>&1; then
+            gh release upload v1.9.7 ACS-Orar-v1.9.7-debug.apk --clobber
           else
-            gh release create v1.9.6 \
-              ACS-Orar-v1.9.6-debug.apk \
-              --title "ACS Orar v1.9.6" \
-              --notes "Android timetable app for first-year ACS / UPB. v1.9.6 replaces the global subgroup with per-subject subgroup choices and applies them to the timetable and reminders."
+            gh release create v1.9.7 \
+              ACS-Orar-v1.9.7-debug.apk \
+              --title "ACS Orar v1.9.7" \
+              --notes "Android timetable app for first-year ACS / UPB. v1.9.7 fixes subgroup detection so electives such as AB IA1 are not mistaken for subgroup-specific subjects, and real subgrouped subjects expose the full group subgroup count."
           fi
