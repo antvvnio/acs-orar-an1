@@ -40,7 +40,7 @@ Pentru fiecare astfel de disciplină poți alege:
 
 Activitățile comune întregii grupe rămân întotdeauna vizibile. Alegerea unei subgrupe la o materie nu afectează celelalte materii, iar notificările folosesc aceleași selecții.
 
-Opționalele nu sunt deduse ca subgrupe doar din poziția lor vizuală în grilă. Unele cursuri opționale (de exemplu IA1 în AB) apar într-o singură coloană de subgrupă deși disciplina se aplică prin mecanismul de opționale; acestea rămân în secțiunea Opționale.
+Dacă o disciplină apare într-o singură coloană de subgrupă, selectorul folosește tot numărul complet de subgrupe al grupei. De exemplu, la 311 AB, IA1 poate apărea vizual într-o singură coloană, dar selectorul oferă atât Subgrupa 1, cât și Subgrupa 2. Cursurile opționale rămân vizibile indiferent de această alegere dacă poziția lor în grilă este doar un artefact de layout.
 
 ## Opționale CTI (seriile C)
 
