@@ -58,8 +58,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var scheduleScroll: NestedScrollView
     private lateinit var seriesDropdown: AutoCompleteTextView
     private lateinit var groupDropdown: AutoCompleteTextView
-    private lateinit var subgroupLayout: TextInputLayout
-    private lateinit var subgroupDropdown: AutoCompleteTextView
+    private lateinit var subgroupCard: MaterialCardView
+    private lateinit var subgroupList: LinearLayout
     private lateinit var optionalCard: MaterialCardView
     private lateinit var optionalList: LinearLayout
     private lateinit var sourceText: TextView
@@ -102,6 +102,8 @@ class MainActivity : AppCompatActivity() {
     private var currentSlots: List<ScheduleSlot> = emptyList()
     private var currentOptionals: Set<String> = emptySet()
     private val manualSeminarEditors = linkedMapOf<String, ManualSeminarEditor>()
+    private val subjectSubgroupEditors = linkedMapOf<String, AutoCompleteTextView>()
+    private var subjectSubgroups: Map<String, SubjectSubgroups.Subject> = emptyMap()
     private var psychologyCheck: MaterialCheckBox? = null
     private var frenchCheck: MaterialCheckBox? = null
     private var psychologyCourseDropdown: AutoCompleteTextView? = null
@@ -147,8 +149,8 @@ class MainActivity : AppCompatActivity() {
         scheduleScroll = findViewById(R.id.scheduleScroll)
         seriesDropdown = findViewById(R.id.seriesDropdown)
         groupDropdown = findViewById(R.id.groupDropdown)
-        subgroupLayout = findViewById(R.id.subgroupLayout)
-        subgroupDropdown = findViewById(R.id.subgroupDropdown)
+        subgroupCard = findViewById(R.id.subgroupCard)
+        subgroupList = findViewById(R.id.subgroupList)
         optionalCard = findViewById(R.id.optionalCard)
         optionalList = findViewById(R.id.optionalList)
         sourceText = findViewById(R.id.sourceText)
@@ -318,8 +320,10 @@ class MainActivity : AppCompatActivity() {
         setupProgress.visibility = View.VISIBLE
         saveConfigurationButton.isEnabled = false
         groupDropdown.isEnabled = false
-        subgroupLayout.visibility = View.GONE
-        subgroupDropdown.isEnabled = false
+        subgroupCard.visibility = View.GONE
+        subgroupList.removeAllViews()
+        subjectSubgroupEditors.clear()
+        subjectSubgroups = emptyMap()
         optionalList.removeAllViews()
         sourceText.text = "Se încarcă seria $series…"
 
@@ -335,14 +339,14 @@ class MainActivity : AppCompatActivity() {
             groupDropdown.setOnClickListener { groupDropdown.showDropDown() }
             groupDropdown.setOnItemClickListener { _, _, position, _ ->
                 val groupNumber = groupAdapter.getItem(position) ?: return@setOnItemClickListener
-                configureSubgroupSelector(data, groupNumber)
+                configureSubjectSubgroups(data, groupNumber)
             }
 
             val savedGroup = preferences.getString(groupKey(series), null)
                 ?.takeIf { it in groupNumbers }
                 ?: groupNumbers.firstOrNull().orEmpty()
             groupDropdown.setText(savedGroup, false)
-            configureSubgroupSelector(data, savedGroup)
+            configureSubjectSubgroups(data, savedGroup)
 
             val savedOptionals = preferences.getStringSet(optionalKey(series), emptySet())
                 ?.map(::canonicalizeSubjectCode)
@@ -353,40 +357,85 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun configureSubgroupSelector(data: LoadedSchedule, groupNumber: String) {
+    private fun configureSubjectSubgroups(data: LoadedSchedule, groupNumber: String) {
+        subgroupList.removeAllViews()
+        subjectSubgroupEditors.clear()
+        subjectSubgroups = emptyMap()
+
         val group = data.groups.firstOrNull { it.number == groupNumber }
-        if (group == null || group.subgroupCount <= 1) {
-            subgroupLayout.visibility = View.GONE
-            subgroupDropdown.isEnabled = false
-            subgroupDropdown.setText(SUBGROUP_ALL_LABEL, false)
+        if (group == null) {
+            subgroupCard.visibility = View.GONE
             return
         }
 
-        val choices = buildList {
-            add(SUBGROUP_ALL_LABEL)
-            for (index in 1..group.subgroupCount) add("Subgrupa $index")
+        val slots = ScheduleParser.parseForGroup(
+            data.sheet,
+            group,
+            data.catalog.optionalCodes,
+            data.catalog,
+        )
+        val detected = SubjectSubgroups.detect(slots, data.catalog)
+        if (detected.isEmpty()) {
+            subgroupCard.visibility = View.GONE
+            return
         }
-        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, choices)
-        subgroupDropdown.setAdapter(adapter)
-        subgroupDropdown.setOnClickListener { subgroupDropdown.showDropDown() }
-        subgroupDropdown.isEnabled = true
-        subgroupLayout.visibility = View.VISIBLE
 
-        val saved = preferences.getInt(subgroupKey(data.series, group.number), 0)
-            .coerceIn(0, group.subgroupCount)
-        subgroupDropdown.setText(if (saved == 0) SUBGROUP_ALL_LABEL else "Subgrupa $saved", false)
+        subjectSubgroups = detected.associateBy { it.key }
+        subgroupCard.visibility = View.VISIBLE
+
+        for (subject in detected) {
+            subgroupList.addView(TextView(this).apply {
+                text = subject.label
+                textSize = 14f
+                setTypeface(typeface, Typeface.BOLD)
+                setTextColor(color(R.color.text_primary))
+                setPadding(0, dp(8), 0, dp(2))
+            })
+
+            val choices = buildList {
+                add(SUBGROUP_ALL_LABEL)
+                for (index in 1..subject.subgroupCount) add("Subgrupa $index")
+            }
+            val saved = SubjectSubgroups.readSelection(
+                preferences,
+                data.series,
+                group.number,
+                subject.key,
+                subject.subgroupCount,
+            )
+            val selected = if (saved == SubjectSubgroups.SHOW_ALL) {
+                SUBGROUP_ALL_LABEL
+            } else {
+                "Subgrupa $saved"
+            }
+            val dropdown = addManualDropdown(
+                subgroupList,
+                "Subgrupa",
+                choices,
+                selected,
+            )
+            subjectSubgroupEditors[subject.key] = dropdown
+        }
     }
 
-    private fun selectedSubgroup(group: GroupInfo): Int {
-        if (group.subgroupCount <= 1) return 0
-        val value = subgroupDropdown.text.toString().trim()
-        val selected = Regex("""^Subgrupa\s+(\d+)$""", RegexOption.IGNORE_CASE)
-            .matchEntire(value)
-            ?.groupValues
-            ?.getOrNull(1)
-            ?.toIntOrNull()
-            ?: 0
-        return selected.coerceIn(0, group.subgroupCount)
+    private fun saveSubjectSubgroups(series: String, group: String) {
+        for ((key, editor) in subjectSubgroupEditors) {
+            val subject = subjectSubgroups[key] ?: continue
+            val selected = Regex("""^Subgrupa\s+(\d+)$""", RegexOption.IGNORE_CASE)
+                .matchEntire(editor.text.toString().trim())
+                ?.groupValues
+                ?.getOrNull(1)
+                ?.toIntOrNull()
+                ?.coerceIn(1, subject.subgroupCount)
+                ?: SubjectSubgroups.SHOW_ALL
+            SubjectSubgroups.writeSelection(
+                preferences,
+                series,
+                group,
+                key,
+                selected,
+            )
+        }
     }
 
     private fun populateOptionalChecks(data: LoadedSchedule, selected: Set<String>) {
@@ -720,11 +769,10 @@ class MainActivity : AppCompatActivity() {
         val selectedOptionals = checkedOptionalCodes()
         saveManualSeminars(selectedSeries)
         saveFacultatives(selectedSeries)
-        val subgroup = selectedSubgroup(group)
+        saveSubjectSubgroups(selectedSeries, groupNumber)
         preferences.edit()
             .putString(KEY_CURRENT_SERIES, selectedSeries)
             .putString(groupKey(selectedSeries), groupNumber)
-            .putInt(subgroupKey(selectedSeries, groupNumber), subgroup)
             .putStringSet(optionalKey(selectedSeries), selectedOptionals)
             .apply()
 
@@ -766,13 +814,6 @@ class MainActivity : AppCompatActivity() {
                 ?.map(::canonicalizeSubjectCode)
                 ?.filterTo(linkedSetOf()) { it in data.catalog.optionalCodes }
                 .orEmpty()
-            val subgroup = if (group.subgroupCount <= 1) {
-                0
-            } else {
-                preferences.getInt(subgroupKey(series, group.number), 0)
-                    .coerceIn(0, group.subgroupCount)
-            }
-
             executor.execute {
                 val parsedSlots = ScheduleParser.parseForGroup(data.sheet, group, optionals, data.catalog)
                 val manualActivityTypes = OptionalScheduleParser.manualActivityTypes(data.sheet, data.catalog)
@@ -787,12 +828,15 @@ class MainActivity : AppCompatActivity() {
                 val facultativeActivities =
                     FacultativeSchedules.psychologyCourseSlots(preferences, series, facultativeInfo) +
                         FacultativeSchedules.manualSlots(preferences, series, facultativeInfo)
-                val slots = filterSlotsForSubgroup(
-                    CustomOptionalSeminars.mergeSlots(
-                        CustomOptionalSeminars.mergeSlots(parsedSlots, customOptionalActivities),
-                        facultativeActivities,
-                    ),
-                    subgroup,
+                val mergedSlots = CustomOptionalSeminars.mergeSlots(
+                    CustomOptionalSeminars.mergeSlots(parsedSlots, customOptionalActivities),
+                    facultativeActivities,
+                )
+                val slots = SubjectSubgroups.filter(
+                    preferences,
+                    series,
+                    group.number,
+                    mergedSlots,
                 )
                 runOnUiThread {
                     if (generation != loadGeneration.get() || isFinishing) return@runOnUiThread
@@ -803,8 +847,8 @@ class MainActivity : AppCompatActivity() {
                     mainProgress.visibility = View.GONE
                     scheduleScroll.visibility = View.VISIBLE
                     toolbar.title = "ACS Orar"
-                    toolbar.subtitle = if (subgroup > 0) "${group.name} · Subgrupa $subgroup" else group.name
-                    profileBadge.text = if (subgroup > 0) "${group.name} · SG$subgroup" else group.name
+                    toolbar.subtitle = group.name
+                    profileBadge.text = group.name
                     anchorTeachingWeekIndex = AcademicWeek.closestTeachingWeekIndex(LocalDate.now())
                     selectedTeachingWeekIndex = anchorTeachingWeekIndex
                     updateWeekHeader()
@@ -819,7 +863,7 @@ class MainActivity : AppCompatActivity() {
                         selectDefaultDay()
                     }
                     renderSelectedDay()
-                    dataSourceFooter.text = buildSourceFooter(data, optionals, subgroup)
+                    dataSourceFooter.text = buildSourceFooter(data, optionals)
                     ReminderScheduler.rescheduleAsync(this)
                 }
             }
@@ -1113,17 +1157,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun filterSlotsForSubgroup(slots: List<ScheduleSlot>, subgroup: Int): List<ScheduleSlot> {
-        if (subgroup <= 0) return slots
-        return slots.mapNotNull { slot ->
-            val activities = slot.activities.filter {
-                it.subgroupIndex == 0 || it.subgroupIndex == subgroup
-            }
-            if (activities.isEmpty()) null else slot.copy(activities = activities)
-        }
-    }
 
-    private fun buildSourceFooter(data: LoadedSchedule, optionals: Set<String>, subgroup: Int): String {
+    private fun buildSourceFooter(data: LoadedSchedule, optionals: Set<String>): String {
         val selectedNames = optionals.mapNotNull { data.catalog.subjects[it]?.code }.sorted()
         val facultativeInfo = FacultativeScheduleParser.parse(data.sheet)
         val facultatives = buildList {
@@ -1132,7 +1167,6 @@ class MainActivity : AppCompatActivity() {
         }
         return buildString {
             append(data.sourceLabel)
-            if (subgroup > 0) append("\nSubgrupa: $subgroup")
             if (selectedNames.isNotEmpty()) append("\nOpționale: ${selectedNames.joinToString(", ")}")
             if (facultatives.isNotEmpty()) append("\nFacultative: ${facultatives.joinToString(", ")}")
             if (facultativeInfo.physicalEducationExternalSchedule) {
@@ -1183,7 +1217,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun groupKey(series: String) = "group_$series"
-    private fun subgroupKey(series: String, group: String) = "subgroup_${series}_$group"
     private fun optionalKey(series: String) = "optionals_$series"
     private fun color(res: Int): Int = ContextCompat.getColor(this, res)
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
