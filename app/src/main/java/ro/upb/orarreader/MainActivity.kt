@@ -681,6 +681,19 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun saveFacultatives(series: String) {
+        FacultativeSchedules.setEnabled(
+            preferences,
+            series,
+            psychology = psychologyCheck?.isChecked == true,
+            french = frenchCheck?.isChecked == true,
+        )
+
+        val label = psychologyCourseDropdown?.text?.toString().orEmpty()
+        val key = psychologyCourseLabelToKey[label] ?: "ALL"
+        FacultativeSchedules.setPsychologyCourseSelection(preferences, series, key)
+    }
+
     private fun optionalCategoryRank(code: String): Int {
         return when (canonicalizeSubjectCode(code)) {
             "IA1", "GAC", "IA2" -> 0
@@ -705,6 +718,7 @@ class MainActivity : AppCompatActivity() {
 
         val selectedOptionals = checkedOptionalCodes()
         saveManualSeminars(selectedSeries)
+        saveFacultatives(selectedSeries)
         val subgroup = selectedSubgroup(group)
         preferences.edit()
             .putString(KEY_CURRENT_SERIES, selectedSeries)
@@ -760,16 +774,23 @@ class MainActivity : AppCompatActivity() {
 
             executor.execute {
                 val parsedSlots = ScheduleParser.parseForGroup(data.sheet, group, optionals, data.catalog)
-                val manualCodes = OptionalScheduleParser.manualSeminarCodes(data.sheet, data.catalog)
-                val customSeminars = CustomOptionalSeminars.slots(
+                val manualActivityTypes = OptionalScheduleParser.manualActivityTypes(data.sheet, data.catalog)
+                val customOptionalActivities = CustomOptionalSeminars.slots(
                     preferences,
                     series,
                     optionals,
-                    manualCodes,
+                    manualActivityTypes,
                     data.catalog,
                 )
+                val facultativeInfo = FacultativeScheduleParser.parse(data.sheet)
+                val facultativeActivities =
+                    FacultativeSchedules.psychologyCourseSlots(preferences, series, facultativeInfo) +
+                        FacultativeSchedules.manualSlots(preferences, series, facultativeInfo)
                 val slots = filterSlotsForSubgroup(
-                    CustomOptionalSeminars.mergeSlots(parsedSlots, customSeminars),
+                    CustomOptionalSeminars.mergeSlots(
+                        CustomOptionalSeminars.mergeSlots(parsedSlots, customOptionalActivities),
+                        facultativeActivities,
+                    ),
                     subgroup,
                 )
                 runOnUiThread {
@@ -1033,6 +1054,13 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             when {
+                activity.facultative && activity.type != null && typeColors != null -> {
+                    val label = "${activity.type.displayName.replaceFirstChar { it.titlecase() }} facultativ"
+                    badges.addView(badge(label, typeColors.first, typeColors.second))
+                }
+                activity.facultative -> {
+                    badges.addView(badge("Facultativ", R.color.optional, R.color.optional_soft))
+                }
                 activity.optional && activity.type != null && typeColors != null -> {
                     val label = "${activity.type.displayName.replaceFirstChar { it.titlecase() }} opțional"
                     badges.addView(badge(label, typeColors.first, typeColors.second))
@@ -1096,10 +1124,19 @@ class MainActivity : AppCompatActivity() {
 
     private fun buildSourceFooter(data: LoadedSchedule, optionals: Set<String>, subgroup: Int): String {
         val selectedNames = optionals.mapNotNull { data.catalog.subjects[it]?.code }.sorted()
+        val facultativeInfo = FacultativeScheduleParser.parse(data.sheet)
+        val facultatives = buildList {
+            if (FacultativeSchedules.isPsychologyEnabled(preferences, data.series)) add("Psihologia educației")
+            if (FacultativeSchedules.isFrenchEnabled(preferences, data.series)) add("Franceză")
+        }
         return buildString {
             append(data.sourceLabel)
             if (subgroup > 0) append("\nSubgrupa: $subgroup")
             if (selectedNames.isNotEmpty()) append("\nOpționale: ${selectedNames.joinToString(", ")}")
+            if (facultatives.isNotEmpty()) append("\nFacultative: ${facultatives.joinToString(", ")}")
+            if (facultativeInfo.physicalEducationExternalSchedule) {
+                append("\nEducație fizică: orarul se confirmă la sala de sport.")
+            }
         }
     }
 
