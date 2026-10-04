@@ -35,7 +35,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 app:cardBackgroundColor="@color/surface"
-                app:cardCornerRadius="22dp"
+                app:cardCornerRadius="8dp"
                 app:cardElevation="0dp"
                 app:strokeColor="@color/outline"
                 app:strokeWidth="1dp">
@@ -96,7 +96,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 app:cardBackgroundColor="@color/surface_accent"
-                app:cardCornerRadius="18dp"
+                app:cardCornerRadius="8dp"
                 app:cardElevation="0dp">
 
                 <LinearLayout
@@ -138,7 +138,7 @@
                 android:layout_marginTop="18dp"
                 android:text="Salvează notificările"
                 android:textAllCaps="false"
-                app:cornerRadius="16dp" />
+                app:cornerRadius="8dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/notificationSettingsButton"
