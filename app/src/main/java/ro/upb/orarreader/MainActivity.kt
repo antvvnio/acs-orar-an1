@@ -372,7 +372,11 @@ class MainActivity : AppCompatActivity() {
             data.catalog.optionalCodes,
             data.catalog,
         )
-        val detected = SubjectSubgroups.detect(slots, data.catalog)
+        val detected = SubjectSubgroups.detect(
+            slots,
+            data.catalog,
+            group.subgroupCount,
+        )
         if (detected.isEmpty()) {
             subgroupCard.visibility = View.GONE
             return
