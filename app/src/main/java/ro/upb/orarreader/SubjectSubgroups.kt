@@ -23,10 +23,7 @@ object SubjectSubgroups {
     ): List<Subject> {
         val activities = slots
             .flatMap { it.activities }
-            // Optional courses can occupy only one visual subgroup column even when the
-            // elective applies to the whole group (AB/IA1 is one such layout). Their
-            // allocation is handled by the elective parser, not by subgroup filtering.
-            .filter { it.subgroupIndex > 0 && !it.optional && !it.facultative }
+            .filter { it.subgroupIndex > 0 && !it.facultative }
 
         return activities
             .groupBy(::keyFor)
@@ -82,6 +79,10 @@ object SubjectSubgroups {
         return slots.mapNotNull { slot ->
             val activities = slot.activities.filter { activity ->
                 if (activity.subgroupIndex <= 0) {
+                    true
+                } else if (activity.optional && activity.type == ro.upb.orarreader.model.ActivityType.COURSE) {
+                    // Optional course cells may be drawn in only one subgroup column even though
+                    // the course itself applies to every student who chose the elective.
                     true
                 } else {
                     val selected = preferences.getInt(
