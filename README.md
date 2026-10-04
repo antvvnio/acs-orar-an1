@@ -40,6 +40,8 @@ Pentru fiecare astfel de disciplină poți alege:
 
 Activitățile comune întregii grupe rămân întotdeauna vizibile. Alegerea unei subgrupe la o materie nu afectează celelalte materii, iar notificările folosesc aceleași selecții.
 
+Opționalele nu sunt deduse ca subgrupe doar din poziția lor vizuală în grilă. Unele cursuri opționale (de exemplu IA1 în AB) apar într-o singură coloană de subgrupă deși disciplina se aplică prin mecanismul de opționale; acestea rămân în secțiunea Opționale.
+
 ## Opționale CTI (seriile C)
 
 Pentru seriile CA, CB, CC și CD, aplicația recunoaște disciplinele din legenda oficială, inclusiv:
