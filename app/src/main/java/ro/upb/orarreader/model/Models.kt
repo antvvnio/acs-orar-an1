@@ -87,6 +87,7 @@ data class ScheduleActivity(
     /** 0 means the activity applies to the entire selected group. */
     val subgroupIndex: Int,
     val optional: Boolean = false,
+    val facultative: Boolean = false,
 )
 
 data class ScheduleSlot(
