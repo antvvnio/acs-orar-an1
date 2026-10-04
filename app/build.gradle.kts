@@ -11,8 +11,8 @@ android {
         applicationId = "ro.upb.orarreader"
         minSdk = 26
         targetSdk = 36
-        versionCode = 199
-        versionName = "1.9.9"
+        versionCode = 200
+        versionName = "1.9.10"
     }
 
     buildTypes {
