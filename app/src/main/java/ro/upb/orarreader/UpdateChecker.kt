@@ -17,10 +17,8 @@ object UpdateChecker {
     private const val API_URL = "https://api.github.com/repos/antvvnio/acs-orar-an1/releases/latest"
     private const val RELEASES_URL = "https://github.com/antvvnio/acs-orar-an1/releases/latest"
     private const val PREFS = "update_checker"
-    private const val KEY_LAST_CHECK = "last_check"
     private const val KEY_REMIND_AFTER = "remind_after"
-    private const val AUTO_CHECK_INTERVAL_MS = 24L * 60L * 60L * 1000L
-    private const val REMIND_LATER_MS = 3L * 24L * 60L * 60L * 1000L
+    private const val REMIND_LATER_MS = 24L * 60L * 60L * 1000L
 
     private val executor = Executors.newSingleThreadExecutor()
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -36,10 +34,6 @@ object UpdateChecker {
         val remindAfter = preferences.getLong(KEY_REMIND_AFTER, 0L)
         if (now < remindAfter) return
 
-        val lastCheck = preferences.getLong(KEY_LAST_CHECK, 0L)
-        if (now - lastCheck < AUTO_CHECK_INTERVAL_MS) return
-
-        preferences.edit().putLong(KEY_LAST_CHECK, now).apply()
         check(activity, manual = false)
     }
 
