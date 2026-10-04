@@ -92,6 +92,17 @@ Orele din paritatea opusă nu sunt afișate.
 - `OptionalScheduleParser.kt`: programul opționalelor descris în legendă, fără a ghici între sesiuni alternative;
 - `ActivityTextParser.kt`: materie, prescurtare, tip și sală.
 
+## Actualizări
+
+Aplicația verifică periodic ultimul Release publicat în repository-ul GitHub. Dacă există o versiune mai nouă, afișează un dialog cu versiunea instalată și versiunea disponibilă.
+
+Acțiuni disponibile:
+- **Nu acum** — închide dialogul;
+- **Amintește-mi mai târziu** — amână notificarea timp de 3 zile;
+- **Actualizează** — deschide direct ultimul Release GitHub.
+
+Verificarea automată se face cel mult o dată pe zi. În pagina **Despre** există și opțiunea **Verifică actualizările** pentru verificare manuală.
+
 ## Build
 
 - Android Studio recent;
