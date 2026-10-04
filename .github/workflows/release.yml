@@ -27,17 +27,17 @@ jobs:
         run: gradle :app:assembleDebug
 
       - name: Prepare release APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk ACS-Orar-v1.9.10-debug.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk ACS-Orar-v1.9.11-debug.apk
 
-      - name: Publish v1.9.10
+      - name: Publish v1.9.11
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if gh release view v1.9.10 >/dev/null 2>&1; then
-            gh release upload v1.9.10 ACS-Orar-v1.9.10-debug.apk --clobber
+          if gh release view v1.9.11 >/dev/null 2>&1; then
+            gh release upload v1.9.11 ACS-Orar-v1.9.11-debug.apk --clobber
           else
-            gh release create v1.9.10 \
-              ACS-Orar-v1.9.10-debug.apk \
-              --title "ACS Orar v1.9.10" \
-              --notes "Android timetable app for first-year ACS / UPB. v1.9.10 checks GitHub Releases on every app launch and changes 'Remind me later' to postpone the update prompt for one day."
+            gh release create v1.9.11 \
+              ACS-Orar-v1.9.11-debug.apk \
+              --title "ACS Orar v1.9.11" \
+              --notes "Android timetable app for first-year ACS / UPB. v1.9.11 restores a single global subgroup selector per group, including the 'Nu știu / Arată ambele' option, and applies it to the timetable and reminders."
           fi
