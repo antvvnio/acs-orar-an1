@@ -80,10 +80,6 @@ object SubjectSubgroups {
             val activities = slot.activities.filter { activity ->
                 if (activity.subgroupIndex <= 0) {
                     true
-                } else if (activity.optional && activity.type == ro.upb.orarreader.model.ActivityType.COURSE) {
-                    // Optional course cells may be drawn in only one subgroup column even though
-                    // the course itself applies to every student who chose the elective.
-                    true
                 } else {
                     val selected = preferences.getInt(
                         preferenceKey(series, group, keyFor(activity)),
