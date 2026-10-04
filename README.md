@@ -37,6 +37,21 @@ Aplicația detectează automat dacă grupa selectată este împărțită în sub
 - după alegerea unei subgrupe, activitățile comune grupei rămân vizibile, iar activitățile celorlalte subgrupe sunt ascunse;
 - notificările respectă aceeași selecție.
 
+## Opționale CTI (seriile C)
+
+Pentru seriile CA, CB, CC și CD, aplicația recunoaște disciplinele din legenda oficială, inclusiv:
+
+- Antropologie (Ant);
+- Logică (Log);
+- Tehnici de comunicare (TC);
+- Istoria filosofiei (IF);
+- Istoria și filosofia religiilor (IFR);
+- Istoria dezvoltării științei și tehnicii (IDST).
+
+Codul `IFC` întâlnit în grila seriei CC este tratat ca alias pentru `IFR`, nu ca o disciplină separată.
+
+Pentru disciplinele unde legenda spune că seminarul **se stabilește la curs**, aplicația permite configurarea manuală a seminarului după ce studentul află repartizarea: zi, interval, săptămână pară/impară și sală. Seminarul configurat este folosit și pentru notificări.
+
 ## Par / impar
 
 Pentru anul universitar 2026–2027:
