@@ -1,7 +1,12 @@
 package ro.upb.orarreader
 
 import android.content.Context
+import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.Matrix
+import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.PointF
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
@@ -20,6 +25,28 @@ class ZoomImageView @JvmOverloads constructor(
     private var activePointerId = MotionEvent.INVALID_POINTER_ID
     private var lastX = 0f
     private var lastY = 0f
+
+    private var locationPoint: PointF? = null
+    private var locationAccuracyRadius = 0f
+    private var locationHeadingDegrees: Float? = null
+
+    private val accuracyFillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.argb(38, 66, 133, 244)
+        style = Paint.Style.FILL
+    }
+    private val accuracyStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.argb(90, 66, 133, 244)
+        style = Paint.Style.STROKE
+        strokeWidth = dp(1f)
+    }
+    private val locationOutlinePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.WHITE
+        style = Paint.Style.FILL
+    }
+    private val locationPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.rgb(66, 133, 244)
+        style = Paint.Style.FILL
+    }
 
     private val scaleDetector = ScaleGestureDetector(context, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
         override fun onScale(detector: ScaleGestureDetector): Boolean {
@@ -70,6 +97,87 @@ class ZoomImageView @JvmOverloads constructor(
         imageMatrix = drawMatrix
     }
 
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
+        val source = locationPoint ?: return
+        val mapped = floatArrayOf(source.x, source.y)
+        drawMatrix.mapPoints(mapped)
+        val x = mapped[0]
+        val y = mapped[1]
+
+        if (locationAccuracyRadius > 0f) {
+            val radius = drawMatrix.mapRadius(locationAccuracyRadius).coerceAtLeast(dp(4f))
+            canvas.drawCircle(x, y, radius, accuracyFillPaint)
+            canvas.drawCircle(x, y, radius, accuracyStrokePaint)
+        }
+
+        locationHeadingDegrees?.let { angle ->
+            val headingPath = Path().apply {
+                moveTo(dp(24f), 0f)
+                lineTo(dp(5f), -dp(9f))
+                lineTo(dp(5f), dp(9f))
+                close()
+            }
+            canvas.save()
+            canvas.translate(x, y)
+            canvas.rotate(angle)
+            canvas.drawPath(headingPath, locationOutlinePaint)
+            canvas.save()
+            canvas.scale(0.82f, 0.82f)
+            canvas.drawPath(headingPath, locationPaint)
+            canvas.restore()
+            canvas.restore()
+        }
+
+        canvas.drawCircle(x, y, dp(10f), locationOutlinePaint)
+        canvas.drawCircle(x, y, dp(7f), locationPaint)
+    }
+
+    fun setMapLocation(
+        drawableX: Float,
+        drawableY: Float,
+        accuracyRadiusDrawable: Float,
+        headingDegrees: Float?,
+    ) {
+        locationPoint = PointF(drawableX, drawableY)
+        locationAccuracyRadius = accuracyRadiusDrawable.coerceAtLeast(0f)
+        locationHeadingDegrees = headingDegrees
+        invalidate()
+    }
+
+    fun clearMapLocation() {
+        locationPoint = null
+        locationAccuracyRadius = 0f
+        locationHeadingDegrees = null
+        invalidate()
+    }
+
+    fun focusOnDrawablePoint(
+        drawableX: Float,
+        drawableY: Float,
+        relativeScale: Float = 2.5f,
+    ) {
+        val d = drawable ?: return
+        if (width <= 0 || height <= 0 || d.intrinsicWidth <= 0 || d.intrinsicHeight <= 0) return
+
+        val fitScale = min(
+            width.toFloat() / d.intrinsicWidth,
+            height.toFloat() / d.intrinsicHeight,
+        )
+        currentScale = relativeScale.coerceIn(1f, 6f)
+        val totalScale = fitScale * currentScale
+
+        drawMatrix.reset()
+        drawMatrix.postScale(totalScale, totalScale)
+        drawMatrix.postTranslate(
+            width / 2f - drawableX * totalScale,
+            height / 2f - drawableY * totalScale,
+        )
+        constrainTranslation()
+        imageMatrix = drawMatrix
+        invalidate()
+    }
+
     override fun onTouchEvent(event: MotionEvent): Boolean {
         parent?.requestDisallowInterceptTouchEvent(true)
         scaleDetector.onTouchEvent(event)
@@ -115,6 +223,8 @@ class ZoomImageView @JvmOverloads constructor(
         }
         return true
     }
+
+    private fun dp(value: Float): Float = value * resources.displayMetrics.density
 
     private fun constrainTranslation() {
         val d = drawable ?: return
