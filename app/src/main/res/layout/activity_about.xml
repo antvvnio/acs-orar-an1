@@ -70,7 +70,7 @@
                 android:layout_marginTop="16dp"
                 android:text="Verifică actualizările"
                 android:textAllCaps="false"
-                app:cornerRadius="16dp" />
+                app:cornerRadius="8dp" />
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/githubCard"
@@ -81,7 +81,7 @@
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackground"
                 app:cardBackgroundColor="@color/surface"
-                app:cardCornerRadius="18dp"
+                app:cardCornerRadius="8dp"
                 app:cardElevation="0dp"
                 app:strokeColor="@color/outline"
                 app:strokeWidth="1dp">
