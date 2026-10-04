@@ -31,7 +31,7 @@ object SubjectCatalogParser {
     private val knownFirstYearElectives = setOf(
         "IA1", "IA2", "GAC",
         "CC", "DP", "CA", "IFR", "FILO", "LOG",
-        "TC", "IF", "ANT", "IFC",
+        "TC", "IF", "ANT", "IDST",
     )
 
     private val ignoredCodes = setOf(
@@ -65,7 +65,7 @@ object SubjectCatalogParser {
         "IF" to "Istoria filosofiei",
         "TC" to "Tehnici de comunicare",
         "Ant" to "Antropologie",
-        "IFC" to "Istoria și filosofia culturii",
+        "IFC" to "Istoria și filosofia religiilor",
         "IS" to "Identificarea sistemelor",
         "SBC" to "Sisteme bazate pe cunoștințe",
         "RCA" to "Rețele de calculatoare în automatizări",
