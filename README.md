@@ -1,6 +1,6 @@
 # ACS Orar - Anul I ACS UPB
 
-Aplicație Android pentru **anul I ACS / UPB** care transformă fișierele Excel oficiale de orar într-un orar lizibil pentru grupa studentului.
+Aplicație Android pentru **anul I ACS / UPB** care folosește orarele oficiale incluse în aplicație și afișează programul relevant pentru seria, grupa, subgrupa și opționalele studentului.
 
 ## Serii suportate
 
@@ -26,6 +26,16 @@ Exemplu:
 `Sala: ED310a`
 
 Parserul evită să confunde săli precum `EC 105` sau `AN 030` cu prescurtări de materii. Dacă în celulă apare numai denumirea completă, încearcă să o asocieze cu prescurtarea cunoscută din legenda aceluiași workbook.
+
+## Subgrupe
+
+Aplicația detectează automat dacă grupa selectată este împărțită în subgrupe, folosind structura coloanelor din orarul oficial.
+
+- dacă grupa nu are subgrupe, nu apare nicio setare suplimentară;
+- dacă există subgrupe, poți alege **Subgrupa 1**, **Subgrupa 2** etc.;
+- opțiunea implicită **Nu știu / Arată ambele** păstrează activitățile tuturor subgrupelor și le etichetează;
+- după alegerea unei subgrupe, activitățile comune grupei rămân vizibile, iar activitățile celorlalte subgrupe sunt ascunse;
+- notificările respectă aceeași selecție.
 
 ## Par / impar
 

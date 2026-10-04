@@ -82,7 +82,15 @@ object ReminderScheduler {
         val groups = ScheduleParser.detectGroups(sheet)
         val group = groups.firstOrNull { it.number == groupNumber } ?: return
         val catalog = SubjectCatalogParser.parse(sheet)
-        val slots = ScheduleParser.parseForGroup(sheet, group, optionals, catalog)
+        val subgroup = if (group.subgroupCount <= 1) {
+            0
+        } else {
+            prefs.getInt("subgroup_${series}_${group.number}", 0).coerceIn(0, group.subgroupCount)
+        }
+        val slots = filterSlotsForSubgroup(
+            ScheduleParser.parseForGroup(sheet, group, optionals, catalog),
+            subgroup,
+        )
 
         val alarmManager = context.getSystemService(AlarmManager::class.java)
         val now = System.currentTimeMillis()
@@ -148,6 +156,16 @@ object ReminderScheduler {
             }
         }
         prefs.edit().remove(KEY_ALARM_IDS).apply()
+    }
+
+    private fun filterSlotsForSubgroup(slots: List<ScheduleSlot>, subgroup: Int): List<ScheduleSlot> {
+        if (subgroup <= 0) return slots
+        return slots.mapNotNull { slot ->
+            val activities = slot.activities.filter {
+                it.subgroupIndex == 0 || it.subgroupIndex == subgroup
+            }
+            if (activities.isEmpty()) null else slot.copy(activities = activities)
+        }
     }
 
     private fun readSheet(context: Context, series: String): ro.upb.orarreader.model.GridSheet {
