@@ -432,6 +432,108 @@ class MainActivity : AppCompatActivity() {
                 optionalList.addView(editor.root)
             }
         }
+
+        if (hasFacultatives) {
+            optionalList.addView(TextView(this).apply {
+                text = "Facultative"
+                textSize = 15f
+                setTypeface(typeface, Typeface.BOLD)
+                setTextColor(color(R.color.text_primary))
+                setPadding(0, dp(14), 0, dp(4))
+            })
+        }
+
+        if (facultativeInfo.psychologyCourses.isNotEmpty()) {
+            val check = MaterialCheckBox(this).apply {
+                text = "Psihologia educației"
+                textSize = 14f
+                setTextColor(color(R.color.text_primary))
+                isChecked = FacultativeSchedules.isPsychologyEnabled(preferences, data.series)
+                buttonTintList = ColorStateList.valueOf(color(R.color.accent))
+                minHeight = dp(48)
+            }
+            psychologyCheck = check
+            optionalList.addView(check)
+
+            val panel = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                visibility = if (check.isChecked) View.VISIBLE else View.GONE
+                setPadding(dp(12), dp(8), dp(12), dp(10))
+                background = GradientDrawable().apply {
+                    shape = GradientDrawable.RECTANGLE
+                    cornerRadius = dp(16).toFloat()
+                    setColor(color(R.color.surface_variant))
+                }
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                ).apply { bottomMargin = dp(10) }
+            }
+
+            val allLabel = "Nu știu / Arată ambele cursuri"
+            val labels = linkedMapOf(allLabel to "ALL")
+            facultativeInfo.psychologyCourses.forEach { slot ->
+                val room = slot.activities.firstOrNull()?.room
+                val label = buildString {
+                    append(slot.day)
+                    append(" · ")
+                    append(slot.timeLabel)
+                    if (!room.isNullOrBlank()) append(" · $room")
+                }
+                labels[label] = FacultativeSchedules.courseKey(slot)
+            }
+            psychologyCourseLabelToKey = labels
+            val savedKey = FacultativeSchedules.psychologyCourseSelection(preferences, data.series)
+            val savedLabel = labels.entries.firstOrNull { it.value == savedKey }?.key ?: allLabel
+            psychologyCourseDropdown = addManualDropdown(
+                panel,
+                "Curs",
+                labels.keys.toList(),
+                savedLabel,
+            )
+
+            if (facultativeInfo.psychologySeminarManual) {
+                val editor = createManualActivityEditor(
+                    data.series,
+                    FacultativeSchedules.PSYCHOLOGY_KEY,
+                    ActivityType.SEMINAR,
+                    "stabilit la curs",
+                )
+                manualSeminarEditors[FacultativeSchedules.PSYCHOLOGY_KEY] = editor
+                panel.addView(editor.root)
+            }
+
+            check.setOnCheckedChangeListener { _, checked ->
+                panel.visibility = if (checked) View.VISIBLE else View.GONE
+            }
+            optionalList.addView(panel)
+        }
+
+        if (facultativeInfo.frenchSeminarManual) {
+            val check = MaterialCheckBox(this).apply {
+                text = "Franceză · seminar facultativ"
+                textSize = 14f
+                setTextColor(color(R.color.text_primary))
+                isChecked = FacultativeSchedules.isFrenchEnabled(preferences, data.series)
+                buttonTintList = ColorStateList.valueOf(color(R.color.accent))
+                minHeight = dp(48)
+            }
+            frenchCheck = check
+            optionalList.addView(check)
+
+            val editor = createManualActivityEditor(
+                data.series,
+                FacultativeSchedules.FRENCH_KEY,
+                ActivityType.SEMINAR,
+                "stabilit cu profesorul",
+            )
+            manualSeminarEditors[FacultativeSchedules.FRENCH_KEY] = editor
+            editor.root.visibility = if (check.isChecked) View.VISIBLE else View.GONE
+            check.setOnCheckedChangeListener { _, checked ->
+                editor.root.visibility = if (checked) View.VISIBLE else View.GONE
+            }
+            optionalList.addView(editor.root)
+        }
     }
 
     private fun createManualActivityEditor(
