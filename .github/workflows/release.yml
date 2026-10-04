@@ -27,17 +27,17 @@ jobs:
         run: gradle :app:assembleDebug
 
       - name: Prepare release APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk ACS-Orar-v1.9.2-debug.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk ACS-Orar-v1.9.3-debug.apk
 
-      - name: Publish v1.9.2
+      - name: Publish v1.9.3
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if gh release view v1.9.2 >/dev/null 2>&1; then
-            gh release upload v1.9.2 ACS-Orar-v1.9.2-debug.apk --clobber
+          if gh release view v1.9.3 >/dev/null 2>&1; then
+            gh release upload v1.9.3 ACS-Orar-v1.9.3-debug.apk --clobber
           else
-            gh release create v1.9.2 \
-              ACS-Orar-v1.9.2-debug.apk \
-              --title "ACS Orar v1.9.2" \
-              --notes "Android timetable app for first-year ACS / UPB. v1.9.2 adds automatic subgroup detection and optional subgroup filtering, including subgroup-aware reminders."
+            gh release create v1.9.3 \
+              ACS-Orar-v1.9.3-debug.apk \
+              --title "ACS Orar v1.9.3" \
+              --notes "Android timetable app for first-year ACS / UPB. v1.9.3 fixes CTI electives, aliases IFC to IFR, adds IDST, and supports manual seminar schedules for electives whose seminar is assigned at the course."
           fi
