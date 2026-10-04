@@ -16,33 +16,34 @@ object OptionalScheduleParser {
         """(?iu)(?:(curs(?:\s+op(?:ț|ţ|t)ional)?|laborator(?:e)?|seminar(?:ii)?)\s+)?(?:(LUNI|MARȚI|MARTI|MIERCURI|JOI|VINERI|SÂMBĂTĂ|SAMBATA)\s+)?(\d{1,2})\s*[-–]\s*(\d{1,2})(?:\s+((?:impar|par)(?:\s*(?:și|si|/|\+)\s*(?:impar|par))?))?"""
     )
 
-    fun manualSeminarCodes(
+    fun manualActivityTypes(
         sheet: GridSheet,
         catalog: SubjectCatalog,
-    ): Set<String> {
-        val orderedCells = sheet.cells
-            .map { it to cleanWhitespace(it.text) }
-            .filter { (_, text) -> text.isNotBlank() }
-            .sortedWith(compareBy<Pair<ro.upb.orarreader.model.GridCell, String>> { it.first.rowStart }.thenBy { it.first.colStart })
+    ): Map<String, ActivityType> {
+        val result = linkedMapOf<String, ActivityType>()
 
-        val result = linkedSetOf<String>()
-        for ((canonical, subject) in catalog.subjects) {
-            val candidates = orderedCells.withIndex()
-                .filter { (_, item) -> containsCodeAtEntryStart(item.second, subject.code) }
+        for (cell in sheet.cells) {
+            val text = cleanWhitespace(cell.text)
+            if (text.isBlank()) continue
+            val normalized = normalize(text)
+            val scheduleIsTbd =
+                normalized.contains("SE STABILESC LA CURS") ||
+                normalized.contains("SE STABILESTE LA CURS") ||
+                normalized.contains("SE STABILESC CU PROFESORUL") ||
+                normalized.contains("SE STABILESTE CU PROFESORUL")
+            if (!scheduleIsTbd) continue
 
-            for ((startIndex, _) in candidates) {
-                val text = buildLegendEntryText(orderedCells, startIndex, catalog)
-                val normalized = normalize(text)
-                val mentionsSeminar = Regex("""\bSEMINAR(?:UL|II|IILE|I)?\b""").containsMatchIn(normalized)
-                val scheduleIsTbd =
-                    normalized.contains("SE STABILESC LA CURS") ||
-                    normalized.contains("SE STABILESTE LA CURS") ||
-                    normalized.contains("SE STABILESC CU PROFESORUL") ||
-                    normalized.contains("SE STABILESTE CU PROFESORUL")
-                if (mentionsSeminar && scheduleIsTbd) {
-                    result += canonicalizeSubjectCode(canonical)
-                    break
-                }
+            val type = when {
+                Regex("""\bLABORATOR(?:UL|ELE|II|IILE|I)?\b""").containsMatchIn(normalized) -> ActivityType.LAB
+                Regex("""\bSEMINAR(?:UL|ELE|II|IILE|I)?\b""").containsMatchIn(normalized) -> ActivityType.SEMINAR
+                else -> null
+            } ?: continue
+
+            val mentioned = SubjectCatalogParser.codesMentioned(text, catalog).toMutableSet()
+            SubjectCatalogParser.extractCode(text)?.let { mentioned += canonicalizeSubjectCode(it) }
+            for (code in mentioned) {
+                val canonical = canonicalizeSubjectCode(code)
+                if (canonical in catalog.subjects) result[canonical] = type
             }
         }
         return result
