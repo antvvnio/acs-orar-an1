@@ -19,10 +19,14 @@ object SubjectSubgroups {
     fun detect(
         slots: List<ScheduleSlot>,
         catalog: SubjectCatalog,
+        groupSubgroupCount: Int,
     ): List<Subject> {
         val activities = slots
             .flatMap { it.activities }
-            .filter { it.subgroupIndex > 0 && !it.facultative }
+            // Optional courses can occupy only one visual subgroup column even when the
+            // elective applies to the whole group (AB/IA1 is one such layout). Their
+            // allocation is handled by the elective parser, not by subgroup filtering.
+            .filter { it.subgroupIndex > 0 && !it.optional && !it.facultative }
 
         return activities
             .groupBy(::keyFor)
@@ -39,7 +43,9 @@ object SubjectSubgroups {
                 Subject(
                     key = key,
                     label = label,
-                    subgroupCount = values.maxOf { it.subgroupIndex }.coerceAtLeast(1),
+                    subgroupCount = groupSubgroupCount.coerceAtLeast(
+                        values.maxOf { it.subgroupIndex }
+                    ),
                 )
             }
             .sortedBy { it.label.lowercase() }
