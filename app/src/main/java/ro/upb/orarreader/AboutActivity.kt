@@ -10,6 +10,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 
 class AboutActivity : AppCompatActivity() {
@@ -22,8 +23,11 @@ class AboutActivity : AppCompatActivity() {
         findViewById<MaterialToolbar>(R.id.toolbar).setNavigationOnClickListener { finish() }
         val version = packageManager.getPackageInfo(packageName, 0).versionName ?: "1.2"
         findViewById<TextView>(R.id.versionText).text = "Versiunea $version"
+        findViewById<MaterialButton>(R.id.checkUpdatesButton).setOnClickListener {
+            UpdateChecker.checkManually(this)
+        }
         findViewById<MaterialCardView>(R.id.githubCard).setOnClickListener {
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/antvvnio")))
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/antvvnio/acs-orar-an1")))
         }
         findViewById<TextView>(R.id.mapSourceText).setOnClickListener {
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(CampusMapActivity.MAP_URL)))
