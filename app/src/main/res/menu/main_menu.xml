@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_map"
+        android:icon="@drawable/ic_map_24"
+        android:title="Hartă campus"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_notifications"
+        android:icon="@drawable/ic_notifications_24"
+        android:title="Notificări"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_about"
+        android:icon="@drawable/ic_info_24"
+        android:title="Despre"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_settings"
+        android:icon="@drawable/ic_settings_24"
+        android:title="Configurare orar"
+        app:showAsAction="always" />
+</menu>
