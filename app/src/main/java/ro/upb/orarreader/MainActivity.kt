@@ -38,6 +38,7 @@ import ro.upb.orarreader.model.WeekParity
 import ro.upb.orarreader.model.canonicalizeSubjectCode
 import ro.upb.orarreader.parser.AcademicWeek
 import ro.upb.orarreader.parser.BundledScheduleReader
+import ro.upb.orarreader.parser.FacultativeScheduleParser
 import ro.upb.orarreader.parser.OptionalScheduleParser
 import ro.upb.orarreader.parser.ScheduleParser
 import ro.upb.orarreader.parser.SubjectCatalogParser
@@ -101,6 +102,10 @@ class MainActivity : AppCompatActivity() {
     private var currentSlots: List<ScheduleSlot> = emptyList()
     private var currentOptionals: Set<String> = emptySet()
     private val manualSeminarEditors = linkedMapOf<String, ManualSeminarEditor>()
+    private var psychologyCheck: MaterialCheckBox? = null
+    private var frenchCheck: MaterialCheckBox? = null
+    private var psychologyCourseDropdown: AutoCompleteTextView? = null
+    private var psychologyCourseLabelToKey: Map<String, String> = emptyMap()
     private var selectedDay: String = "LUNI"
     private var requestedDay: String? = null
     private var anchorTeachingWeekIndex: Int = AcademicWeek.closestTeachingWeekIndex(LocalDate.now())
@@ -386,11 +391,17 @@ class MainActivity : AppCompatActivity() {
     private fun populateOptionalChecks(data: LoadedSchedule, selected: Set<String>) {
         optionalList.removeAllViews()
         manualSeminarEditors.clear()
+        psychologyCheck = null
+        frenchCheck = null
+        psychologyCourseDropdown = null
+        psychologyCourseLabelToKey = emptyMap()
 
         val catalog = data.catalog
-        val manualSeminarCodes = OptionalScheduleParser.manualSeminarCodes(data.sheet, catalog)
+        val manualActivityTypes = OptionalScheduleParser.manualActivityTypes(data.sheet, catalog)
+        val facultativeInfo = FacultativeScheduleParser.parse(data.sheet)
         val optionals = catalog.optionalSubjects.sortedWith(compareBy({ optionalCategoryRank(it.code) }, { it.code.lowercase() }))
-        optionalCard.visibility = if (optionals.isEmpty()) View.GONE else View.VISIBLE
+        val hasFacultatives = facultativeInfo.psychologyCourses.isNotEmpty() || facultativeInfo.frenchSeminarManual
+        optionalCard.visibility = if (optionals.isEmpty() && !hasFacultatives) View.GONE else View.VISIBLE
 
         for (subject in optionals) {
             val check = MaterialCheckBox(this).apply {
@@ -405,8 +416,14 @@ class MainActivity : AppCompatActivity() {
             }
             optionalList.addView(check)
 
-            if (subject.canonicalCode in manualSeminarCodes) {
-                val editor = createManualSeminarEditor(data.series, subject.canonicalCode)
+            val manualType = manualActivityTypes[subject.canonicalCode]
+            if (manualType != null) {
+                val editor = createManualActivityEditor(
+                    data.series,
+                    subject.canonicalCode,
+                    manualType,
+                    "stabilit la curs",
+                )
                 editor.root.visibility = if (check.isChecked) View.VISIBLE else View.GONE
                 check.setOnCheckedChangeListener { _, checked ->
                     editor.root.visibility = if (checked) View.VISIBLE else View.GONE
@@ -417,7 +434,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun createManualSeminarEditor(series: String, code: String): ManualSeminarEditor {
+    private fun createManualActivityEditor(
+        series: String,
+        code: String,
+        activityType: ActivityType,
+        assignmentLabel: String,
+    ): ManualSeminarEditor {
         val config = CustomOptionalSeminars.read(preferences, series, code)
 
         val root = LinearLayout(this).apply {
@@ -434,8 +456,15 @@ class MainActivity : AppCompatActivity() {
             ).apply { bottomMargin = dp(10) }
         }
 
+        val activityName = when (activityType) {
+            ActivityType.LAB -> "Laborator"
+            ActivityType.SEMINAR -> "Seminar"
+            ActivityType.COURSE -> "Curs"
+        }
+        val activityNameLower = activityName.lowercase()
+
         root.addView(TextView(this).apply {
-            text = "Seminar stabilit la curs"
+            text = "$activityName $assignmentLabel"
             textSize = 13.5f
             setTypeface(typeface, Typeface.BOLD)
             setTextColor(color(R.color.text_primary))
@@ -448,7 +477,7 @@ class MainActivity : AppCompatActivity() {
         })
 
         val enabled = MaterialCheckBox(this).apply {
-            text = "Am aflat programul seminarului"
+            text = "Am aflat programul $activityNameLower"
             isChecked = config.enabled
             buttonTintList = ColorStateList.valueOf(color(R.color.accent))
         }
