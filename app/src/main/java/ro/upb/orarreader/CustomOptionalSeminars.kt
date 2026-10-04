@@ -61,15 +61,16 @@ object CustomOptionalSeminars {
         preferences: SharedPreferences,
         series: String,
         selectedCodes: Set<String>,
-        allowedCodes: Set<String>,
+        allowedTypes: Map<String, ActivityType>,
         catalog: SubjectCatalog,
     ): List<ScheduleSlot> {
         return selectedCodes
             .map(::canonicalizeSubjectCode)
             .distinct()
-            .filter { it in allowedCodes }
+            .filter { it in allowedTypes }
             .mapNotNull { canonical ->
                 val subject = catalog.subjects[canonical] ?: return@mapNotNull null
+                val activityType = allowedTypes[canonical] ?: return@mapNotNull null
                 val config = read(preferences, series, canonical)
                 if (!config.enabled) return@mapNotNull null
 
@@ -82,7 +83,7 @@ object CustomOptionalSeminars {
                         ScheduleActivity(
                             subject = subject.fullName,
                             code = subject.code,
-                            type = ActivityType.SEMINAR,
+                            type = activityType,
                             room = config.room.takeIf { it.isNotBlank() },
                             subgroupIndex = 0,
                             optional = true,
