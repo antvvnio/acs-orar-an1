@@ -123,6 +123,7 @@ class MainActivity : AppCompatActivity() {
         configureWeekNavigation()
         requestedDay = intent.getStringExtra(ReminderScheduler.EXTRA_DAY)
         ReminderScheduler.createChannel(this)
+        UpdateChecker.checkAutomatically(this)
 
         saveConfigurationButton.setOnClickListener { saveConfiguration() }
 
