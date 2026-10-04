@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="background">#0E1015</color>
+    <color name="surface">#181B22</color>
+    <color name="surface_variant">#232833</color>
+    <color name="surface_accent">#1D2948</color>
+    <color name="text_primary">#F4F6FA</color>
+    <color name="text_secondary">#A8B0BF</color>
+    <color name="accent">#A6BAFF</color>
+    <color name="accent_strong">#88A3FF</color>
+    <color name="accent_soft">#27365C</color>
+    <color name="hero">#2447A8</color>
+    <color name="hero_text">#FFFFFF</color>
+    <color name="hero_subtext">#DEE6FF</color>
+    <color name="hero_badge_bg">#2BFFFFFF</color>
+    <color name="outline">#343B48</color>
+    <color name="course">#A7BAFF</color>
+    <color name="course_soft">#25335C</color>
+    <color name="lab">#C7B6FF</color>
+    <color name="lab_soft">#352D52</color>
+    <color name="seminar">#78DAB8</color>
+    <color name="seminar_soft">#173D32</color>
+    <color name="optional">#FFC46B</color>
+    <color name="optional_soft">#4B3517</color>
+    <color name="danger">#FFB4AB</color>
+    <color name="week_card">#1D2948</color>
+</resources>
