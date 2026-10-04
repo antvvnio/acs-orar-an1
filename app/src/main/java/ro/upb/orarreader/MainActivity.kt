@@ -106,8 +106,6 @@ class MainActivity : AppCompatActivity() {
     private var subjectSubgroups: Map<String, SubjectSubgroups.Subject> = emptyMap()
     private var psychologyCheck: MaterialCheckBox? = null
     private var frenchCheck: MaterialCheckBox? = null
-    private var psychologyCourseDropdown: AutoCompleteTextView? = null
-    private var psychologyCourseLabelToKey: Map<String, String> = emptyMap()
     private var selectedDay: String = "LUNI"
     private var requestedDay: String? = null
     private var anchorTeachingWeekIndex: Int = AcademicWeek.closestTeachingWeekIndex(LocalDate.now())
@@ -443,8 +441,6 @@ class MainActivity : AppCompatActivity() {
         manualSeminarEditors.clear()
         psychologyCheck = null
         frenchCheck = null
-        psychologyCourseDropdown = null
-        psychologyCourseLabelToKey = emptyMap()
 
         val catalog = data.catalog
         val manualActivityTypes = OptionalScheduleParser.manualActivityTypes(data.sheet, catalog)
@@ -520,27 +516,12 @@ class MainActivity : AppCompatActivity() {
                 ).apply { bottomMargin = dp(10) }
             }
 
-            val allLabel = "Nu știu / Arată ambele cursuri"
-            val labels = linkedMapOf(allLabel to "ALL")
-            facultativeInfo.psychologyCourses.forEach { slot ->
-                val room = slot.activities.firstOrNull()?.room
-                val label = buildString {
-                    append(slot.day)
-                    append(" · ")
-                    append(slot.timeLabel)
-                    if (!room.isNullOrBlank()) append(" · $room")
-                }
-                labels[label] = FacultativeSchedules.courseKey(slot)
-            }
-            psychologyCourseLabelToKey = labels
-            val savedKey = FacultativeSchedules.psychologyCourseSelection(preferences, data.series)
-            val savedLabel = labels.entries.firstOrNull { it.value == savedKey }?.key ?: allLabel
-            psychologyCourseDropdown = addManualDropdown(
-                panel,
-                "Curs",
-                labels.keys.toList(),
-                savedLabel,
-            )
+            panel.addView(TextView(this).apply {
+                text = "Cursuri: luni 12:00–14:00 · CantiCTI și joi 10:00–12:00 · A04 Leu"
+                textSize = 12.5f
+                setTextColor(color(R.color.text_secondary))
+                setPadding(0, dp(6), 0, dp(4))
+            })
 
             if (facultativeInfo.psychologySeminarManual) {
                 val editor = createManualActivityEditor(
@@ -739,9 +720,7 @@ class MainActivity : AppCompatActivity() {
             french = frenchCheck?.isChecked == true,
         )
 
-        val label = psychologyCourseDropdown?.text?.toString().orEmpty()
-        val key = psychologyCourseLabelToKey[label] ?: "ALL"
-        FacultativeSchedules.setPsychologyCourseSelection(preferences, series, key)
+
     }
 
     private fun optionalCategoryRank(code: String): Int {
