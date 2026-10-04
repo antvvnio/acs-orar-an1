@@ -34,8 +34,8 @@ object OptionalScheduleParser {
             if (!scheduleIsTbd) continue
 
             val type = when {
-                Regex("""\bLABORATOR(?:UL|ELE|II|IILE|I)?\b""").containsMatchIn(normalized) -> ActivityType.LAB
-                Regex("""\bSEMINAR(?:UL|ELE|II|IILE|I)?\b""").containsMatchIn(normalized) -> ActivityType.SEMINAR
+                normalized.contains("LABORATOR") || normalized.contains("LABORATOAR") -> ActivityType.LAB
+                normalized.contains("SEMINAR") -> ActivityType.SEMINAR
                 else -> null
             } ?: continue
 
