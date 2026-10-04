@@ -73,15 +73,15 @@ Pentru seriile AA, AB și AC, fișierul mai precizează că **orarul pentru Educ
 
 ## Hartă și locație
 
-Pagina **Noul Local** a hărții oficiale UPB este georeferențiată folosind puncte GPS de control. Butonul de localizare de pe hartă:
+Toate cele trei pagini ale hărții oficiale UPB — **Noul Local**, **Leu** și **Polizu** — sunt georeferențiate folosind puncte GPS de control. Butonul de localizare de pe hartă:
 
 - cere permisiunea Android de locație la prima folosire;
 - afișează poziția printr-un punct albastru și cercul de precizie GPS;
 - folosește senzorul de rotație al telefonului pentru săgeata de direcție;
 - centrează harta pe poziția curentă când este apăsat;
-- nu afișează markerul dacă poziția GPS se află în afara zonei acoperite de hartă.
+- nu afișează markerul dacă poziția GPS se află în afara zonei acoperite de pagina selectată.
 
-Localizarea este disponibilă momentan doar pe pagina **Noul Local**; paginile Leu și Polizu nu sunt încă georeferențiate.
+Interfața folosește un stil mai plat și mai pătrățos, cu colțuri mici și carduri fără umbre puternice, fără să schimbe logica orarului.
 
 ## Par / impar
 
