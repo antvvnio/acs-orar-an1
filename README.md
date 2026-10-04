@@ -29,18 +29,16 @@ Parserul evită să confunde săli precum `EC 105` sau `AN 030` cu prescurtări 
 
 ## Subgrupe
 
-Subgrupa nu este tratată ca o singură setare globală pentru toată grupa. După alegerea seriei și a grupei, aplicația scanează orarul și afișează separat disciplinele care au activități împărțite pe subgrupe.
+Subgrupa este o setare globală pentru grupa selectată. Dacă grupa are mai multe subgrupe, înainte de secțiunea de opționale apare un singur selector:
 
-Pentru fiecare astfel de disciplină poți alege:
-
-- **Nu știu / Arată ambele** — implicit;
+- **Nu știu / Arată ambele** — implicit, păstrează activitățile tuturor subgrupelor;
 - **Subgrupa 1**;
 - **Subgrupa 2**;
-- sau alte valori dacă structura orarului conține mai multe subgrupe.
+- sau alte valori dacă grupa are mai multe subgrupe în orarul oficial.
 
-Activitățile comune întregii grupe rămân întotdeauna vizibile. Alegerea unei subgrupe la o materie nu afectează celelalte materii, iar notificările folosesc aceleași selecții.
+Activitățile comune întregii grupe rămân vizibile indiferent de alegere. Activitățile marcate pentru altă subgrupă sunt ascunse, iar notificările folosesc aceeași selecție globală.
 
-Dacă o disciplină apare într-o singură coloană de subgrupă, selectorul folosește tot numărul complet de subgrupe al grupei. De exemplu, la 311 AB, IA1 apare la marți 18–20 pe Subgrupa 1, iar ISO apare pe Subgrupa 2 în săptămâna pară. Selectorul oferă SG1 și SG2, iar filtrarea respectă poziția reală a fiecărei activități din grilă.
+Exemplu: la **311 AB**, marți 18–20, IA1 este în coloana SG1, iar ISO este în coloana SG2 în săptămâna pară. Alegerea globală a subgrupei filtrează aceste activități exact după poziția lor din orar.
 
 ## Opționale CTI (seriile C)
 
