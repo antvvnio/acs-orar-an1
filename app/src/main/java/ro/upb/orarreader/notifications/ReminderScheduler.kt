@@ -12,6 +12,7 @@ import android.os.Build
 import androidx.core.content.ContextCompat
 import ro.upb.orarreader.CustomOptionalSeminars
 import ro.upb.orarreader.FacultativeSchedules
+import ro.upb.orarreader.SubjectSubgroups
 import ro.upb.orarreader.model.ScheduleActivity
 import ro.upb.orarreader.model.ScheduleSlot
 import ro.upb.orarreader.model.WeekParity
@@ -86,11 +87,6 @@ object ReminderScheduler {
         val groups = ScheduleParser.detectGroups(sheet)
         val group = groups.firstOrNull { it.number == groupNumber } ?: return
         val catalog = SubjectCatalogParser.parse(sheet)
-        val subgroup = if (group.subgroupCount <= 1) {
-            0
-        } else {
-            prefs.getInt("subgroup_${series}_${group.number}", 0).coerceIn(0, group.subgroupCount)
-        }
         val parsedSlots = ScheduleParser.parseForGroup(sheet, group, optionals, catalog)
         val manualActivityTypes = OptionalScheduleParser.manualActivityTypes(sheet, catalog)
         val customOptionalActivities = CustomOptionalSeminars.slots(
@@ -104,12 +100,15 @@ object ReminderScheduler {
         val facultativeActivities =
             FacultativeSchedules.psychologyCourseSlots(prefs, series, facultativeInfo) +
                 FacultativeSchedules.manualSlots(prefs, series, facultativeInfo)
-        val slots = filterSlotsForSubgroup(
-            CustomOptionalSeminars.mergeSlots(
-                CustomOptionalSeminars.mergeSlots(parsedSlots, customOptionalActivities),
-                facultativeActivities,
-            ),
-            subgroup,
+        val mergedSlots = CustomOptionalSeminars.mergeSlots(
+            CustomOptionalSeminars.mergeSlots(parsedSlots, customOptionalActivities),
+            facultativeActivities,
+        )
+        val slots = SubjectSubgroups.filter(
+            prefs,
+            series,
+            group.number,
+            mergedSlots,
         )
 
         val alarmManager = context.getSystemService(AlarmManager::class.java)
@@ -178,15 +177,6 @@ object ReminderScheduler {
         prefs.edit().remove(KEY_ALARM_IDS).apply()
     }
 
-    private fun filterSlotsForSubgroup(slots: List<ScheduleSlot>, subgroup: Int): List<ScheduleSlot> {
-        if (subgroup <= 0) return slots
-        return slots.mapNotNull { slot ->
-            val activities = slot.activities.filter {
-                it.subgroupIndex == 0 || it.subgroupIndex == subgroup
-            }
-            if (activities.isEmpty()) null else slot.copy(activities = activities)
-        }
-    }
 
     private fun readSheet(context: Context, series: String): ro.upb.orarreader.model.GridSheet {
         return BundledScheduleReader.read(context.assets, series)
