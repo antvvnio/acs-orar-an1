@@ -103,10 +103,10 @@ Aplicația verifică periodic ultimul Release publicat în repository-ul GitHub.
 
 Acțiuni disponibile:
 - **Nu acum** — închide dialogul;
-- **Amintește-mi mai târziu** — amână notificarea timp de 3 zile;
+- **Amintește-mi mai târziu** — amână notificarea timp de 1 zi;
 - **Actualizează** — deschide direct ultimul Release GitHub.
 
-Verificarea automată se face cel mult o dată pe zi. În pagina **Despre** există și opțiunea **Verifică actualizările** pentru verificare manuală.
+Verificarea automată se face la fiecare deschidere a aplicației, exceptând perioada în care utilizatorul a ales **Amintește-mi mai târziu**. În pagina **Despre** există și opțiunea **Verifică actualizările** pentru verificare manuală.
 
 ## Build
 
