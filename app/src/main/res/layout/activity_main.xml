@@ -50,7 +50,7 @@
                         android:layout_width="56dp"
                         android:layout_height="56dp"
                         app:cardBackgroundColor="@color/surface_accent"
-                        app:cardCornerRadius="18dp"
+                        app:cardCornerRadius="8dp"
                         app:cardElevation="0dp"
                         app:strokeWidth="0dp">
 
@@ -102,7 +102,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     app:cardBackgroundColor="@color/surface"
-                    app:cardCornerRadius="24dp"
+                    app:cardCornerRadius="8dp"
                     app:cardElevation="1dp"
                     app:strokeWidth="0dp">
 
@@ -194,7 +194,7 @@
                     android:layout_marginTop="14dp"
                     android:visibility="gone"
                     app:cardBackgroundColor="@color/surface"
-                    app:cardCornerRadius="24dp"
+                    app:cardCornerRadius="8dp"
                     app:cardElevation="1dp"
                     app:strokeWidth="0dp">
 
@@ -243,7 +243,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
                     app:cardBackgroundColor="@color/surface"
-                    app:cardCornerRadius="24dp"
+                    app:cardCornerRadius="8dp"
                     app:cardElevation="1dp"
                     app:strokeWidth="0dp">
 
@@ -287,7 +287,7 @@
                     android:textAllCaps="false"
                     android:textSize="15sp"
                     android:textStyle="bold"
-                    app:cornerRadius="18dp"
+                    app:cornerRadius="8dp"
                     app:icon="@drawable/ic_calendar_24"
                     app:iconGravity="textStart"
                     app:iconPadding="8dp" />
@@ -324,7 +324,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     app:cardBackgroundColor="@color/hero"
-                    app:cardCornerRadius="28dp"
+                    app:cardCornerRadius="8dp"
                     app:cardElevation="0dp"
                     app:strokeWidth="0dp">
 
@@ -354,7 +354,7 @@
                                 android:minHeight="0dp"
                                 android:text=""
                                 app:backgroundTint="@color/hero_badge_bg"
-                                app:cornerRadius="16dp"
+                                app:cornerRadius="8dp"
                                 app:icon="@drawable/ic_chevron_left_24"
                                 app:iconGravity="textStart"
                                 app:iconPadding="0dp"
@@ -413,7 +413,7 @@
                                 android:minHeight="0dp"
                                 android:text=""
                                 app:backgroundTint="@color/hero_badge_bg"
-                                app:cornerRadius="16dp"
+                                app:cornerRadius="8dp"
                                 app:icon="@drawable/ic_chevron_right_24"
                                 app:iconGravity="textStart"
                                 app:iconPadding="0dp"
@@ -522,7 +522,7 @@
                     android:layout_marginTop="14dp"
                     android:visibility="gone"
                     app:cardBackgroundColor="@color/surface"
-                    app:cardCornerRadius="24dp"
+                    app:cardCornerRadius="8dp"
                     app:cardElevation="1dp"
                     app:strokeWidth="0dp">
 
