@@ -10,12 +10,14 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.content.ContextCompat
+import ro.upb.orarreader.CustomOptionalSeminars
 import ro.upb.orarreader.model.ScheduleActivity
 import ro.upb.orarreader.model.ScheduleSlot
 import ro.upb.orarreader.model.WeekParity
 import ro.upb.orarreader.model.canonicalizeSubjectCode
 import ro.upb.orarreader.parser.AcademicWeek
 import ro.upb.orarreader.parser.BundledScheduleReader
+import ro.upb.orarreader.parser.OptionalScheduleParser
 import ro.upb.orarreader.parser.ScheduleParser
 import ro.upb.orarreader.parser.SubjectCatalogParser
 import java.time.DayOfWeek
@@ -87,8 +89,17 @@ object ReminderScheduler {
         } else {
             prefs.getInt("subgroup_${series}_${group.number}", 0).coerceIn(0, group.subgroupCount)
         }
+        val parsedSlots = ScheduleParser.parseForGroup(sheet, group, optionals, catalog)
+        val manualCodes = OptionalScheduleParser.manualSeminarCodes(sheet, catalog)
+        val customSeminars = CustomOptionalSeminars.slots(
+            prefs,
+            series,
+            optionals,
+            manualCodes,
+            catalog,
+        )
         val slots = filterSlotsForSubgroup(
-            ScheduleParser.parseForGroup(sheet, group, optionals, catalog),
+            CustomOptionalSeminars.mergeSlots(parsedSlots, customSeminars),
             subgroup,
         )
 
