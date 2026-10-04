@@ -40,21 +40,24 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:checked="true"
-                android:text="Noul Local" />
+                android:text="Noul Local"
+                app:chipCornerRadius="8dp" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipLeu"
                 style="@style/Widget.Material3.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Leu" />
+                android:text="Leu"
+                app:chipCornerRadius="8dp" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipPolizu"
                 style="@style/Widget.Material3.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Polizu" />
+                android:text="Polizu"
+                app:chipCornerRadius="8dp" />
         </com.google.android.material.chip.ChipGroup>
     </HorizontalScrollView>
 
@@ -78,8 +81,11 @@
             android:layout_margin="18dp"
             android:contentDescription="Arată locația mea"
             android:enabled="false"
+            app:backgroundTint="@color/surface"
+            app:borderWidth="1dp"
+            app:elevation="4dp"
             app:srcCompat="@drawable/ic_my_location_24"
-            app:tint="@android:color/white" />
+            app:tint="@color/accent" />
 
         <com.google.android.material.progressindicator.CircularProgressIndicator
             android:id="@+id/mapProgress"
@@ -117,7 +123,8 @@
             android:layout_weight="1"
             android:enabled="false"
             android:text="Reset zoom"
-            android:textAllCaps="false" />
+            android:textAllCaps="false"
+            app:cornerRadius="8dp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/openOfficialPdfButton"
@@ -126,6 +133,7 @@
             android:layout_height="48dp"
             android:layout_weight="1"
             android:text="PDF oficial"
-            android:textAllCaps="false" />
+            android:textAllCaps="false"
+            app:cornerRadius="8dp" />
     </LinearLayout>
 </LinearLayout>
