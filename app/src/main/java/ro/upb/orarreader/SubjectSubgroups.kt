@@ -75,12 +75,15 @@ object SubjectSubgroups {
     ): List<ScheduleSlot> {
         return slots.mapNotNull { slot ->
             val activities = slot.activities.filter { activity ->
-                if (activity.subgroupIndex <= 0) return@filter true
-                val selected = preferences.getInt(
-                    preferenceKey(series, group, keyFor(activity)),
-                    SHOW_ALL,
-                )
-                selected == SHOW_ALL || selected == activity.subgroupIndex
+                if (activity.subgroupIndex <= 0) {
+                    true
+                } else {
+                    val selected = preferences.getInt(
+                        preferenceKey(series, group, keyFor(activity)),
+                        SHOW_ALL,
+                    )
+                    selected == SHOW_ALL || selected == activity.subgroupIndex
+                }
             }
             if (activities.isEmpty()) null else slot.copy(activities = activities)
         }
