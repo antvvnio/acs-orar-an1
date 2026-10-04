@@ -216,16 +216,24 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="3dp"
-                            android:text="Alege subgrupa separat pentru fiecare materie. Dacă nu știi, lasă ambele."
+                            android:text="Subgrupa se aplică global pentru toate materiile grupei."
                             android:textColor="@color/text_secondary"
                             android:textSize="12.5sp" />
 
-                        <LinearLayout
-                            android:id="@+id/subgroupList"
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="10dp"
-                            android:orientation="vertical" />
+                            android:hint="Subgrupa">
+
+                            <AutoCompleteTextView
+                                android:id="@+id/subgroupDropdown"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="none"
+                                android:minHeight="56dp" />
+                        </com.google.android.material.textfield.TextInputLayout>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
