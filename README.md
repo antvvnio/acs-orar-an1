@@ -70,6 +70,19 @@ Tot în notă apare **Franceză — seminar facultativ**, cu program stabilit cu
 
 Pentru seriile AA, AB și AC, fișierul mai precizează că **orarul pentru Educație fizică se găsește la sala de sport**. Orele din grilă sunt păstrate, dar aplicația afișează și această avertizare.
 
+
+## Hartă și locație
+
+Pagina **Noul Local** a hărții oficiale UPB este georeferențiată folosind puncte GPS de control. Butonul de localizare de pe hartă:
+
+- cere permisiunea Android de locație la prima folosire;
+- afișează poziția printr-un punct albastru și cercul de precizie GPS;
+- folosește senzorul de rotație al telefonului pentru săgeata de direcție;
+- centrează harta pe poziția curentă când este apăsat;
+- nu afișează markerul dacă poziția GPS se află în afara zonei acoperite de hartă.
+
+Localizarea este disponibilă momentan doar pe pagina **Noul Local**; paginile Leu și Polizu nu sunt încă georeferențiate.
+
 ## Par / impar
 
 Pentru anul universitar 2026–2027:
