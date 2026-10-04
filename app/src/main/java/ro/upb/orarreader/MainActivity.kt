@@ -26,6 +26,7 @@ import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.progressindicator.CircularProgressIndicator
+import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import ro.upb.orarreader.model.ActivityType
 import ro.upb.orarreader.model.GridSheet
@@ -37,6 +38,7 @@ import ro.upb.orarreader.model.WeekParity
 import ro.upb.orarreader.model.canonicalizeSubjectCode
 import ro.upb.orarreader.parser.AcademicWeek
 import ro.upb.orarreader.parser.BundledScheduleReader
+import ro.upb.orarreader.parser.OptionalScheduleParser
 import ro.upb.orarreader.parser.ScheduleParser
 import ro.upb.orarreader.parser.SubjectCatalogParser
 import ro.upb.orarreader.notifications.ReminderScheduler
@@ -98,6 +100,7 @@ class MainActivity : AppCompatActivity() {
     private var currentGroup: GroupInfo? = null
     private var currentSlots: List<ScheduleSlot> = emptyList()
     private var currentOptionals: Set<String> = emptySet()
+    private val manualSeminarEditors = linkedMapOf<String, ManualSeminarEditor>()
     private var selectedDay: String = "LUNI"
     private var requestedDay: String? = null
     private var anchorTeachingWeekIndex: Int = AcademicWeek.closestTeachingWeekIndex(LocalDate.now())
@@ -339,7 +342,7 @@ class MainActivity : AppCompatActivity() {
                 ?.map(::canonicalizeSubjectCode)
                 ?.toSet()
                 .orEmpty()
-            populateOptionalChecks(data.catalog, savedOptionals)
+            populateOptionalChecks(data, savedOptionals)
             sourceText.text = data.sourceLabel
         }
     }
@@ -380,8 +383,12 @@ class MainActivity : AppCompatActivity() {
         return selected.coerceIn(0, group.subgroupCount)
     }
 
-    private fun populateOptionalChecks(catalog: SubjectCatalog, selected: Set<String>) {
+    private fun populateOptionalChecks(data: LoadedSchedule, selected: Set<String>) {
         optionalList.removeAllViews()
+        manualSeminarEditors.clear()
+
+        val catalog = data.catalog
+        val manualSeminarCodes = OptionalScheduleParser.manualSeminarCodes(data.sheet, catalog)
         val optionals = catalog.optionalSubjects.sortedWith(compareBy({ optionalCategoryRank(it.code) }, { it.code.lowercase() }))
         optionalCard.visibility = if (optionals.isEmpty()) View.GONE else View.VISIBLE
 
@@ -397,6 +404,149 @@ class MainActivity : AppCompatActivity() {
                 setPadding(dp(2), dp(5), dp(2), dp(5))
             }
             optionalList.addView(check)
+
+            if (subject.canonicalCode in manualSeminarCodes) {
+                val editor = createManualSeminarEditor(data.series, subject.canonicalCode)
+                editor.root.visibility = if (check.isChecked) View.VISIBLE else View.GONE
+                check.setOnCheckedChangeListener { _, checked ->
+                    editor.root.visibility = if (checked) View.VISIBLE else View.GONE
+                }
+                manualSeminarEditors[subject.canonicalCode] = editor
+                optionalList.addView(editor.root)
+            }
+        }
+    }
+
+    private fun createManualSeminarEditor(series: String, code: String): ManualSeminarEditor {
+        val config = CustomOptionalSeminars.read(preferences, series, code)
+
+        val root = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(12), dp(10), dp(12), dp(12))
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = dp(16).toFloat()
+                setColor(color(R.color.surface_variant))
+            }
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            ).apply { bottomMargin = dp(10) }
+        }
+
+        root.addView(TextView(this).apply {
+            text = "Seminar stabilit la curs"
+            textSize = 13.5f
+            setTypeface(typeface, Typeface.BOLD)
+            setTextColor(color(R.color.text_primary))
+        })
+        root.addView(TextView(this).apply {
+            text = "Când afli repartizarea, o poți adăuga aici în orar și în notificări."
+            textSize = 12f
+            setTextColor(color(R.color.text_secondary))
+            setPadding(0, dp(3), 0, dp(4))
+        })
+
+        val enabled = MaterialCheckBox(this).apply {
+            text = "Am aflat programul seminarului"
+            isChecked = config.enabled
+            buttonTintList = ColorStateList.valueOf(color(R.color.accent))
+        }
+        root.addView(enabled)
+
+        val details = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            visibility = if (config.enabled) View.VISIBLE else View.GONE
+        }
+        root.addView(details)
+
+        val day = addManualDropdown(details, "Ziua", days, config.day.takeIf { it in days } ?: "LUNI")
+        val intervals = (8..18).map { start -> "%02d:00 – %02d:00".format(start, start + 2) }
+        val selectedInterval = "%02d:00 – %02d:00".format(config.startHour, config.endHour)
+            .takeIf { it in intervals } ?: "08:00 – 10:00"
+        val interval = addManualDropdown(details, "Interval", intervals, selectedInterval)
+        val parityOptions = listOf("În fiecare săptămână", "Impar", "Par")
+        val selectedParity = when (config.parity) {
+            WeekParity.ODD -> "Impar"
+            WeekParity.EVEN -> "Par"
+            WeekParity.BOTH -> "În fiecare săptămână"
+        }
+        val parity = addManualDropdown(details, "Săptămâna", parityOptions, selectedParity)
+
+        val roomLayout = TextInputLayout(this).apply {
+            boxBackgroundMode = TextInputLayout.BOX_BACKGROUND_OUTLINE
+            hint = "Sala (opțional)"
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            ).apply { topMargin = dp(8) }
+        }
+        val room = TextInputEditText(this).apply {
+            setText(config.room)
+            minHeight = dp(56)
+            setSingleLine(true)
+        }
+        roomLayout.addView(room)
+        details.addView(roomLayout)
+
+        enabled.setOnCheckedChangeListener { _, checked ->
+            details.visibility = if (checked) View.VISIBLE else View.GONE
+        }
+
+        return ManualSeminarEditor(root, enabled, day, interval, parity, room)
+    }
+
+    private fun addManualDropdown(
+        parent: LinearLayout,
+        hint: String,
+        options: List<String>,
+        selected: String,
+    ): AutoCompleteTextView {
+        val layout = TextInputLayout(this).apply {
+            boxBackgroundMode = TextInputLayout.BOX_BACKGROUND_OUTLINE
+            endIconMode = TextInputLayout.END_ICON_DROPDOWN_MENU
+            this.hint = hint
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            ).apply { topMargin = dp(8) }
+        }
+        val input = AutoCompleteTextView(this).apply {
+            inputType = 0
+            minHeight = dp(56)
+            setAdapter(ArrayAdapter(context, android.R.layout.simple_dropdown_item_1line, options))
+            setText(selected, false)
+            setOnClickListener { showDropDown() }
+        }
+        layout.addView(input)
+        parent.addView(layout)
+        return input
+    }
+
+    private fun saveManualSeminars(series: String) {
+        for ((code, editor) in manualSeminarEditors) {
+            val match = Regex("""(\d{2}):00\s*[–-]\s*(\d{2}):00""")
+                .find(editor.interval.text.toString())
+            val start = match?.groupValues?.getOrNull(1)?.toIntOrNull() ?: 8
+            val end = match?.groupValues?.getOrNull(2)?.toIntOrNull() ?: (start + 2)
+            val parity = when (editor.parity.text.toString()) {
+                "Impar" -> WeekParity.ODD
+                "Par" -> WeekParity.EVEN
+                else -> WeekParity.BOTH
+            }
+            CustomOptionalSeminars.write(
+                preferences,
+                series,
+                code,
+                CustomOptionalSeminars.Config(
+                    enabled = editor.enabled.isChecked,
+                    day = editor.day.text.toString().takeIf { it in days } ?: "LUNI",
+                    startHour = start,
+                    endHour = end,
+                    parity = parity,
+                    room = editor.room.text?.toString()?.trim().orEmpty(),
+                ),
+            )
         }
     }
 
@@ -423,6 +573,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         val selectedOptionals = checkedOptionalCodes()
+        saveManualSeminars(selectedSeries)
         val subgroup = selectedSubgroup(group)
         preferences.edit()
             .putString(KEY_CURRENT_SERIES, selectedSeries)
@@ -478,7 +629,18 @@ class MainActivity : AppCompatActivity() {
 
             executor.execute {
                 val parsedSlots = ScheduleParser.parseForGroup(data.sheet, group, optionals, data.catalog)
-                val slots = filterSlotsForSubgroup(parsedSlots, subgroup)
+                val manualCodes = OptionalScheduleParser.manualSeminarCodes(data.sheet, data.catalog)
+                val customSeminars = CustomOptionalSeminars.slots(
+                    preferences,
+                    series,
+                    optionals,
+                    manualCodes,
+                    data.catalog,
+                )
+                val slots = filterSlotsForSubgroup(
+                    CustomOptionalSeminars.mergeSlots(parsedSlots, customSeminars),
+                    subgroup,
+                )
                 runOnUiThread {
                     if (generation != loadGeneration.get() || isFinishing) return@runOnUiThread
                     currentData = data
@@ -856,6 +1018,15 @@ class MainActivity : AppCompatActivity() {
     private fun optionalKey(series: String) = "optionals_$series"
     private fun color(res: Int): Int = ContextCompat.getColor(this, res)
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
+
+    private data class ManualSeminarEditor(
+        val root: LinearLayout,
+        val enabled: MaterialCheckBox,
+        val day: AutoCompleteTextView,
+        val interval: AutoCompleteTextView,
+        val parity: AutoCompleteTextView,
+        val room: TextInputEditText,
+    )
 
     private data class LoadedSchedule(
         val series: String,
