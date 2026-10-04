@@ -1,18 +1,12 @@
-# ACS Orar — Anul I ACS UPB
+# ACS Orar - Anul I ACS UPB
 
 Aplicație Android pentru **anul I ACS / UPB** care transformă fișierele Excel oficiale de orar într-un orar lizibil pentru grupa studentului.
 
 ## Serii suportate
 
 Aplicația este intenționat limitată la anul I și a fost verificată pe toate formatele furnizate:
-
-- AA
-- AB
-- AC
-- CA
-- CB
-- CC
-- CD
+- AIASI: AA, AB, AC
+- CTI: CA, CB, CC, CD
 
 ## Ce afișează
 
