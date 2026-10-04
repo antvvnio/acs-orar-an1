@@ -22,7 +22,7 @@ object SubjectSubgroups {
     ): List<Subject> {
         val activities = slots
             .flatMap { it.activities }
-            .filter { it.subgroupIndex > 0 && !it.optional && !it.facultative }
+            .filter { it.subgroupIndex > 0 && !it.facultative }
 
         return activities
             .groupBy(::keyFor)
