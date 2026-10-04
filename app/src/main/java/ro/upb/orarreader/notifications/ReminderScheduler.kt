@@ -11,12 +11,14 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.content.ContextCompat
 import ro.upb.orarreader.CustomOptionalSeminars
+import ro.upb.orarreader.FacultativeSchedules
 import ro.upb.orarreader.model.ScheduleActivity
 import ro.upb.orarreader.model.ScheduleSlot
 import ro.upb.orarreader.model.WeekParity
 import ro.upb.orarreader.model.canonicalizeSubjectCode
 import ro.upb.orarreader.parser.AcademicWeek
 import ro.upb.orarreader.parser.BundledScheduleReader
+import ro.upb.orarreader.parser.FacultativeScheduleParser
 import ro.upb.orarreader.parser.OptionalScheduleParser
 import ro.upb.orarreader.parser.ScheduleParser
 import ro.upb.orarreader.parser.SubjectCatalogParser
@@ -90,16 +92,23 @@ object ReminderScheduler {
             prefs.getInt("subgroup_${series}_${group.number}", 0).coerceIn(0, group.subgroupCount)
         }
         val parsedSlots = ScheduleParser.parseForGroup(sheet, group, optionals, catalog)
-        val manualCodes = OptionalScheduleParser.manualSeminarCodes(sheet, catalog)
-        val customSeminars = CustomOptionalSeminars.slots(
+        val manualActivityTypes = OptionalScheduleParser.manualActivityTypes(sheet, catalog)
+        val customOptionalActivities = CustomOptionalSeminars.slots(
             prefs,
             series,
             optionals,
-            manualCodes,
+            manualActivityTypes,
             catalog,
         )
+        val facultativeInfo = FacultativeScheduleParser.parse(sheet)
+        val facultativeActivities =
+            FacultativeSchedules.psychologyCourseSlots(prefs, series, facultativeInfo) +
+                FacultativeSchedules.manualSlots(prefs, series, facultativeInfo)
         val slots = filterSlotsForSubgroup(
-            CustomOptionalSeminars.mergeSlots(parsedSlots, customSeminars),
+            CustomOptionalSeminars.mergeSlots(
+                CustomOptionalSeminars.mergeSlots(parsedSlots, customOptionalActivities),
+                facultativeActivities,
+            ),
             subgroup,
         )
 
