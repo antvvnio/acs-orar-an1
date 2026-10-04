@@ -29,13 +29,16 @@ Parserul evită să confunde săli precum `EC 105` sau `AN 030` cu prescurtări 
 
 ## Subgrupe
 
-Aplicația detectează automat dacă grupa selectată este împărțită în subgrupe, folosind structura coloanelor din orarul oficial.
+Subgrupa nu este tratată ca o singură setare globală pentru toată grupa. După alegerea seriei și a grupei, aplicația scanează orarul și afișează separat disciplinele care au activități împărțite pe subgrupe.
 
-- dacă grupa nu are subgrupe, nu apare nicio setare suplimentară;
-- dacă există subgrupe, poți alege **Subgrupa 1**, **Subgrupa 2** etc.;
-- opțiunea implicită **Nu știu / Arată ambele** păstrează activitățile tuturor subgrupelor și le etichetează;
-- după alegerea unei subgrupe, activitățile comune grupei rămân vizibile, iar activitățile celorlalte subgrupe sunt ascunse;
-- notificările respectă aceeași selecție.
+Pentru fiecare astfel de disciplină poți alege:
+
+- **Nu știu / Arată ambele** — implicit;
+- **Subgrupa 1**;
+- **Subgrupa 2**;
+- sau alte valori dacă structura orarului conține mai multe subgrupe.
+
+Activitățile comune întregii grupe rămân întotdeauna vizibile. Alegerea unei subgrupe la o materie nu afectează celelalte materii, iar notificările folosesc aceleași selecții.
 
 ## Opționale CTI (seriile C)
 
@@ -61,7 +64,7 @@ Pentru disciplinele unde legenda spune că seminarul **se stabilește la curs**,
 - luni 12:00–14:00, CantiCTI;
 - joi 10:00–12:00, A04 Leu.
 
-Fișierul nu precizează repartizarea studenților între cele două intervale, așa că aplicația poate afișa ambele sau poate fi configurată să păstreze doar unul. Seminarul de Psihologia educației se stabilește la curs și poate fi adăugat manual.
+Ambele intervale sunt tratate ca ore de curs ale disciplinei. Seminarul de Psihologia educației se stabilește la curs și poate fi adăugat manual după ce este comunicat.
 
 Tot în notă apare **Franceză — seminar facultativ**, cu program stabilit cu profesorul. Poate fi selectată și configurată manual în aplicație.
 
