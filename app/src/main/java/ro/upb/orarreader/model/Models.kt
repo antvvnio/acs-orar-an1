@@ -99,10 +99,14 @@ data class ScheduleSlot(
     val timeLabel: String get() = "%02d:00 – %02d:00".format(startHour, endHour)
 }
 
-fun canonicalizeSubjectCode(value: String): String =
-    value.uppercase()
+fun canonicalizeSubjectCode(value: String): String {
+    val canonical = value.uppercase()
         .replace('Ș', 'S')
         .replace('Ş', 'S')
         .replace('Ț', 'T')
         .replace('Ţ', 'T')
         .filter { it.isLetterOrDigit() }
+
+    // The CC sheet writes IFC for the same elective that the shared legend calls IFR.
+    return if (canonical == "IFC") "IFR" else canonical
+}
