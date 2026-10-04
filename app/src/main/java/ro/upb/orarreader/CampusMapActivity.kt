@@ -169,7 +169,11 @@ class CampusMapActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (locationModeRequested && currentPage == LOCATION_PAGE_INDEX && hasLocationPermission()) {
+        if (
+            locationModeRequested &&
+            CampusMapCalibration.hasCalibration(currentPage) &&
+            hasLocationPermission()
+        ) {
             startLocationTracking()
         }
     }
@@ -220,7 +224,11 @@ class CampusMapActivity : AppCompatActivity() {
 
     @SuppressLint("MissingPermission")
     private fun startLocationTracking() {
-        if (!locationModeRequested || currentPage != LOCATION_PAGE_INDEX || !hasLocationPermission()) return
+        if (
+            !locationModeRequested ||
+            !CampusMapCalibration.hasCalibration(currentPage) ||
+            !hasLocationPermission()
+        ) return
 
         val providers = buildList {
             if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
@@ -279,7 +287,7 @@ class CampusMapActivity : AppCompatActivity() {
     }
 
     private fun updateMapLocation(center: Boolean) {
-        if (!locationModeRequested || currentPage != LOCATION_PAGE_INDEX) {
+        if (!locationModeRequested || !CampusMapCalibration.hasCalibration(currentPage)) {
             mapView.clearMapLocation()
             return
         }
@@ -287,6 +295,7 @@ class CampusMapActivity : AppCompatActivity() {
         val location = lastLocation ?: return
         val drawable = mapView.drawable ?: return
         val point = CampusMapCalibration.toDrawablePoint(
+            pageIndex = currentPage,
             latitude = location.latitude,
             longitude = location.longitude,
             drawableWidth = drawable.intrinsicWidth,
@@ -309,6 +318,7 @@ class CampusMapActivity : AppCompatActivity() {
 
         outsideMapNoticeShown = false
         val accuracyRadius = CampusMapCalibration.accuracyRadiusInDrawable(
+            pageIndex = currentPage,
             latitude = location.latitude,
             longitude = location.longitude,
             accuracyMeters = location.accuracy,
@@ -317,9 +327,10 @@ class CampusMapActivity : AppCompatActivity() {
         )
         val headingAngle = currentHeadingDegrees?.let { heading ->
             CampusMapCalibration.headingAngleInDrawable(
-                location.latitude,
-                location.longitude,
-                heading,
+                pageIndex = currentPage,
+                latitude = location.latitude,
+                longitude = location.longitude,
+                headingDegrees = heading,
             )
         }
 
@@ -399,12 +410,11 @@ class CampusMapActivity : AppCompatActivity() {
         val pdf = renderer ?: return
         if (index !in 0 until pdf.pageCount) return
         currentPage = index
-        locationButton.visibility = if (index == LOCATION_PAGE_INDEX) View.VISIBLE else View.GONE
+        val locationAvailable = CampusMapCalibration.hasCalibration(index)
+        locationButton.visibility = if (locationAvailable) View.VISIBLE else View.GONE
         locationButton.isEnabled = false
-        if (index != LOCATION_PAGE_INDEX) {
-            mapView.clearMapLocation()
-            stopLocationTracking()
-        }
+        mapView.clearMapLocation()
+        stopLocationTracking()
 
         progress.visibility = View.VISIBLE
         statusText.visibility = View.VISIBLE
@@ -431,9 +441,9 @@ class CampusMapActivity : AppCompatActivity() {
                     mapView.setImageBitmap(bitmap)
                     progress.visibility = View.GONE
                     statusText.visibility = View.GONE
-                    locationButton.isEnabled = index == LOCATION_PAGE_INDEX
+                    locationButton.isEnabled = locationAvailable
 
-                    if (index == LOCATION_PAGE_INDEX && locationModeRequested && hasLocationPermission()) {
+                    if (locationAvailable && locationModeRequested && hasLocationPermission()) {
                         updateMapLocation(center = pendingCenterOnLocation)
                         startLocationTracking()
                     }
@@ -461,7 +471,6 @@ class CampusMapActivity : AppCompatActivity() {
 
     companion object {
         const val MAP_URL = "https://upb.ro/wp-content/uploads/2017/11/HARTI-CAMPUS-UPB.pdf"
-        private const val LOCATION_PAGE_INDEX = 0
         private val PAGE_NAMES = listOf("Campus Noul Local", "Campus Leu", "Campus Polizu")
     }
 }
