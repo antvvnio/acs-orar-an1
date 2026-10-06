@@ -1014,8 +1014,57 @@ class MainActivity : AppCompatActivity() {
                 "Nicio oră pentru ${group.name} în ziua asta, în săptămâna ${if (parity == WeekParity.ODD) "impară" else "pară"}."
             }
         } else {
-            daySlots.forEach { scheduleContainer.addView(slotCard(it, data.catalog)) }
+            var latestEndHour: Int? = null
+            daySlots.forEach { slot ->
+                val previousEnd = latestEndHour
+                if (previousEnd != null && slot.startHour > previousEnd) {
+                    scheduleContainer.addView(pauseIndicator(slot.startHour - previousEnd))
+                }
+                scheduleContainer.addView(slotCard(slot, data.catalog))
+                latestEndHour = maxOf(previousEnd ?: slot.endHour, slot.endHour)
+            }
         }
+    }
+
+    private fun pauseIndicator(hours: Int): LinearLayout {
+        val container = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            setPadding(0, dp(2), 0, dp(12))
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            )
+        }
+
+        container.addView(TextView(this).apply {
+            text = "⋮"
+            textSize = 24f
+            setTypeface(typeface, Typeface.BOLD)
+            setTextColor(color(R.color.text_secondary))
+            gravity = Gravity.CENTER
+        })
+
+        container.addView(TextView(this).apply {
+            text = if (hours == 1) "Pauză 1 oră" else "Pauză $hours ore"
+            textSize = 12.5f
+            setTypeface(typeface, Typeface.BOLD)
+            setTextColor(color(R.color.text_secondary))
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = dp(6).toFloat()
+                setColor(color(R.color.surface_variant))
+            }
+            setPadding(dp(10), dp(5), dp(10), dp(5))
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            ).apply {
+                marginStart = dp(6)
+            }
+        })
+
+        return container
     }
 
     private fun buildDaySummary(slots: List<ScheduleSlot>, date: LocalDate): String {
