@@ -73,7 +73,7 @@ Pentru seriile AA, AB și AC, fișierul mai precizează că **orarul pentru Educ
 
 ## Hartă și locație
 
-Toate cele trei pagini ale hărții oficiale UPB — **Noul Local**, **Leu** și **Polizu** — sunt georeferențiate folosind puncte GPS de control. Butonul de localizare de pe hartă:
+Toate cele trei pagini ale hărții oficiale UPB: **Noul Local**, **Leu** și **Polizu**. Acestea sunt georeferențiate folosind puncte GPS de control. Butonul de localizare de pe hartă:
 
 - cere permisiunea Android de locație la prima folosire;
 - afișează poziția printr-un punct albastru și cercul de precizie GPS;
@@ -81,13 +81,11 @@ Toate cele trei pagini ale hărții oficiale UPB — **Noul Local**, **Leu** și
 - centrează harta pe poziția curentă când este apăsat;
 - nu afișează markerul dacă poziția GPS se află în afara zonei acoperite de pagina selectată.
 
-Interfața folosește un stil mai plat și mai pătrățos, cu colțuri mici și carduri fără umbre puternice, fără să schimbe logica orarului.
-
 ## Par / impar
 
 Pentru anul universitar 2026–2027:
 
-- **28 septembrie – 2 octombrie 2026 = săptămână IMPARĂ**;
+- **28 septembrie - 2 octombrie 2026 = săptămână IMPARĂ**;
 - săptămâna următoare = PARĂ;
 - apoi alternează automat.
 
