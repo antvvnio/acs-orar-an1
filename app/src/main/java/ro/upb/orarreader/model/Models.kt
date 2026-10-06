@@ -88,6 +88,8 @@ data class ScheduleActivity(
     val subgroupIndex: Int,
     val optional: Boolean = false,
     val facultative: Boolean = false,
+    /** Non-null only for activities created locally by the user. */
+    val customId: String? = null,
 )
 
 data class ScheduleSlot(
