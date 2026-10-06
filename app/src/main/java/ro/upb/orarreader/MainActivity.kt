@@ -10,6 +10,7 @@ import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -25,6 +26,7 @@ import com.google.android.material.card.MaterialCardView
 import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
@@ -78,6 +80,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var dayTitleText: TextView
     private lateinit var daySummaryText: TextView
     private lateinit var scheduleContainer: LinearLayout
+    private lateinit var addCustomActivityButton: MaterialButton
     private lateinit var emptyCard: MaterialCardView
     private lateinit var emptyText: TextView
     private lateinit var dataSourceFooter: TextView
@@ -102,6 +105,7 @@ class MainActivity : AppCompatActivity() {
     private var currentSlots: List<ScheduleSlot> = emptyList()
     private var currentOptionals: Set<String> = emptySet()
     private val manualSeminarEditors = linkedMapOf<String, ManualSeminarEditor>()
+    private val optionalAllocationEditors = linkedMapOf<String, OptionalAllocationEditor>()
     private var psychologyCheck: MaterialCheckBox? = null
     private var frenchCheck: MaterialCheckBox? = null
     private var selectedDay: String = "LUNI"
@@ -164,6 +168,8 @@ class MainActivity : AppCompatActivity() {
         dayTitleText = findViewById(R.id.dayTitleText)
         daySummaryText = findViewById(R.id.daySummaryText)
         scheduleContainer = findViewById(R.id.scheduleContainer)
+        addCustomActivityButton = findViewById(R.id.addCustomActivityButton)
+        addCustomActivityButton.setOnClickListener { showCustomActivityDialog(null) }
         emptyCard = findViewById(R.id.emptyCard)
         emptyText = findViewById(R.id.emptyText)
         dataSourceFooter = findViewById(R.id.dataSourceFooter)
@@ -394,6 +400,7 @@ class MainActivity : AppCompatActivity() {
     private fun populateOptionalChecks(data: LoadedSchedule, selected: Set<String>) {
         optionalList.removeAllViews()
         manualSeminarEditors.clear()
+        optionalAllocationEditors.clear()
         psychologyCheck = null
         frenchCheck = null
 
@@ -403,6 +410,8 @@ class MainActivity : AppCompatActivity() {
         val optionals = catalog.optionalSubjects.sortedWith(compareBy({ optionalCategoryRank(it.code) }, { it.code.lowercase() }))
         val hasFacultatives = facultativeInfo.psychologyCourses.isNotEmpty() || facultativeInfo.frenchSeminarManual
         optionalCard.visibility = if (optionals.isEmpty() && !hasFacultatives) View.GONE else View.VISIBLE
+
+        val allocationCandidates = OptionalAllocations.candidates(data.sheet, catalog)
 
         for (subject in optionals) {
             val check = MaterialCheckBox(this).apply {
@@ -417,6 +426,8 @@ class MainActivity : AppCompatActivity() {
             }
             optionalList.addView(check)
 
+            val dependentViews = mutableListOf<View>()
+
             val manualType = manualActivityTypes[subject.canonicalCode]
             if (manualType != null) {
                 val editor = createManualActivityEditor(
@@ -426,11 +437,77 @@ class MainActivity : AppCompatActivity() {
                     "stabilit la curs",
                 )
                 editor.root.visibility = if (check.isChecked) View.VISIBLE else View.GONE
-                check.setOnCheckedChangeListener { _, checked ->
-                    editor.root.visibility = if (checked) View.VISIBLE else View.GONE
-                }
                 manualSeminarEditors[subject.canonicalCode] = editor
                 optionalList.addView(editor.root)
+                dependentViews += editor.root
+            }
+
+            val byType = allocationCandidates[subject.canonicalCode].orEmpty()
+            for ((activityType, candidates) in byType) {
+                if (candidates.size <= 1) continue
+
+                val root = LinearLayout(this).apply {
+                    orientation = LinearLayout.VERTICAL
+                    setPadding(dp(12), dp(10), dp(12), dp(12))
+                    background = GradientDrawable().apply {
+                        shape = GradientDrawable.RECTANGLE
+                        cornerRadius = dp(8).toFloat()
+                        setColor(color(R.color.surface_variant))
+                    }
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                    ).apply { bottomMargin = dp(10) }
+                    visibility = if (check.isChecked) View.VISIBLE else View.GONE
+                }
+
+                val typeName = when (activityType) {
+                    ActivityType.LAB -> "laboratorul"
+                    ActivityType.SEMINAR -> "seminarul"
+                    ActivityType.COURSE -> "cursul"
+                }
+                root.addView(TextView(this).apply {
+                    text = "Alege $typeName tău"
+                    textSize = 13.5f
+                    setTypeface(typeface, Typeface.BOLD)
+                    setTextColor(color(R.color.text_primary))
+                })
+                root.addView(TextView(this).apply {
+                    text = "Orarul oficial listează mai multe variante. Alege doar intervalul la care ai fost repartizat."
+                    textSize = 12f
+                    setTextColor(color(R.color.text_secondary))
+                    setPadding(0, dp(3), 0, dp(2))
+                })
+
+                val savedId = OptionalAllocations.readSelection(
+                    preferences,
+                    data.series,
+                    subject.canonicalCode,
+                    activityType,
+                )
+                val selectedCandidate = candidates.firstOrNull { it.id == savedId }
+                val options = listOf(ALLOCATION_NONE_LABEL) + candidates.map { it.displayLabel }
+                val input = addManualDropdown(
+                    root,
+                    if (activityType == ActivityType.LAB) "Laborator" else "Seminar",
+                    options,
+                    selectedCandidate?.displayLabel ?: ALLOCATION_NONE_LABEL,
+                )
+                val key = "${subject.canonicalCode}|${activityType.name}"
+                optionalAllocationEditors[key] = OptionalAllocationEditor(
+                    code = subject.canonicalCode,
+                    type = activityType,
+                    input = input,
+                    candidates = candidates,
+                )
+                optionalList.addView(root)
+                dependentViews += root
+            }
+
+            if (dependentViews.isNotEmpty()) {
+                check.setOnCheckedChangeListener { _, checked ->
+                    dependentViews.forEach { it.visibility = if (checked) View.VISIBLE else View.GONE }
+                }
             }
         }
 
@@ -667,6 +744,20 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun saveOptionalAllocations(series: String) {
+        for ((_, editor) in optionalAllocationEditors) {
+            val selectedText = editor.input.text.toString()
+            val selectedId = editor.candidates.firstOrNull { it.displayLabel == selectedText }?.id
+            OptionalAllocations.writeSelection(
+                preferences,
+                series,
+                editor.code,
+                editor.type,
+                selectedId,
+            )
+        }
+    }
+
     private fun saveFacultatives(series: String) {
         FacultativeSchedules.setEnabled(
             preferences,
@@ -702,6 +793,7 @@ class MainActivity : AppCompatActivity() {
 
         val selectedOptionals = checkedOptionalCodes()
         saveManualSeminars(selectedSeries)
+        saveOptionalAllocations(selectedSeries)
         saveFacultatives(selectedSeries)
         val subgroup = selectedGlobalSubgroup(group)
         preferences.edit()
@@ -757,6 +849,18 @@ class MainActivity : AppCompatActivity() {
             }
             executor.execute {
                 val parsedSlots = ScheduleParser.parseForGroup(data.sheet, group, optionals, data.catalog)
+                val selectedOptionalAllocations = OptionalAllocations.selectedSlots(
+                    preferences,
+                    series,
+                    optionals,
+                    data.sheet,
+                    data.catalog,
+                )
+                val userCustomActivities = UserCustomActivities.slots(
+                    preferences,
+                    series,
+                    group.number,
+                )
                 val manualActivityTypes = OptionalScheduleParser.manualActivityTypes(data.sheet, data.catalog)
                 val customOptionalActivities = CustomOptionalSeminars.slots(
                     preferences,
@@ -770,8 +874,14 @@ class MainActivity : AppCompatActivity() {
                     FacultativeSchedules.psychologyCourseSlots(preferences, series, facultativeInfo) +
                         FacultativeSchedules.manualSlots(preferences, series, facultativeInfo)
                 val mergedSlots = CustomOptionalSeminars.mergeSlots(
-                    CustomOptionalSeminars.mergeSlots(parsedSlots, customOptionalActivities),
-                    facultativeActivities,
+                    CustomOptionalSeminars.mergeSlots(
+                        CustomOptionalSeminars.mergeSlots(
+                            CustomOptionalSeminars.mergeSlots(parsedSlots, customOptionalActivities),
+                            selectedOptionalAllocations,
+                        ),
+                        facultativeActivities,
+                    ),
+                    userCustomActivities,
                 )
                 val slots = filterSlotsForSubgroup(mergedSlots, subgroup)
                 runOnUiThread {
@@ -1059,6 +1169,11 @@ class MainActivity : AppCompatActivity() {
                     (layoutParams as? LinearLayout.LayoutParams)?.marginStart = dp(6)
                 })
             }
+            if (activity.customId != null) {
+                badges.addView(badge("Personalizat", R.color.optional, R.color.optional_soft).apply {
+                    (layoutParams as? LinearLayout.LayoutParams)?.marginStart = dp(6)
+                })
+            }
             if (badges.childCount > 0) addView(badges)
 
             if (!activity.room.isNullOrBlank()) {
@@ -1071,7 +1186,161 @@ class MainActivity : AppCompatActivity() {
                     setPadding(0, dp(9), 0, 0)
                 })
             }
+
+            if (activity.customId != null) {
+                addView(TextView(context).apply {
+                    text = "Apasă pentru editare"
+                    textSize = 11f
+                    setTextColor(color(R.color.accent))
+                    setPadding(0, dp(8), 0, 0)
+                })
+                isClickable = true
+                isFocusable = true
+                setOnClickListener { showCustomActivityDialog(activity.customId) }
+            }
         }
+    }
+
+    private fun showCustomActivityDialog(customId: String?) {
+        val data = currentData ?: return
+        val group = currentGroup ?: return
+        val existing = customId?.let { id ->
+            UserCustomActivities.read(preferences, data.series, group.number)
+                .firstOrNull { it.id == id }
+        }
+
+        val content = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(20), dp(8), dp(20), dp(4))
+        }
+
+        val subjectLayout = TextInputLayout(this).apply {
+            boxBackgroundMode = TextInputLayout.BOX_BACKGROUND_OUTLINE
+            hint = "Denumire"
+        }
+        val subjectInput = TextInputEditText(this).apply {
+            setText(existing?.subject.orEmpty())
+            minHeight = dp(56)
+            setSingleLine(true)
+        }
+        subjectLayout.addView(subjectInput)
+        content.addView(subjectLayout)
+
+        val typeLabels = listOf("Fără tip", "Curs", "Laborator", "Seminar")
+        val initialType = when (existing?.type) {
+            ActivityType.COURSE -> "Curs"
+            ActivityType.LAB -> "Laborator"
+            ActivityType.SEMINAR -> "Seminar"
+            null -> "Fără tip"
+        }
+        val typeInput = addManualDropdown(content, "Tip", typeLabels, initialType)
+        val dayInput = addManualDropdown(
+            content,
+            "Ziua",
+            days,
+            existing?.day?.takeIf { it in days } ?: selectedDay,
+        )
+
+        val intervalOptions = buildList {
+            for (startHour in 8..20) {
+                for (duration in 1..4) {
+                    val endHour = startHour + duration
+                    if (endHour <= 22) add("%02d:00 – %02d:00".format(startHour, endHour))
+                }
+            }
+        }
+        val existingInterval = existing?.let {
+            "%02d:00 – %02d:00".format(it.startHour, it.endHour)
+        }
+        val intervalInput = addManualDropdown(
+            content,
+            "Interval",
+            intervalOptions,
+            existingInterval?.takeIf { it in intervalOptions } ?: "08:00 – 10:00",
+        )
+
+        val parityOptions = listOf("În fiecare săptămână", "Impar", "Par")
+        val parityInput = addManualDropdown(
+            content,
+            "Săptămâna",
+            parityOptions,
+            when (existing?.parity ?: WeekParity.BOTH) {
+                WeekParity.ODD -> "Impar"
+                WeekParity.EVEN -> "Par"
+                WeekParity.BOTH -> "În fiecare săptămână"
+            },
+        )
+
+        val roomLayout = TextInputLayout(this).apply {
+            boxBackgroundMode = TextInputLayout.BOX_BACKGROUND_OUTLINE
+            hint = "Sala (opțional)"
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            ).apply { topMargin = dp(8) }
+        }
+        val roomInput = TextInputEditText(this).apply {
+            setText(existing?.room.orEmpty())
+            minHeight = dp(56)
+            setSingleLine(true)
+        }
+        roomLayout.addView(roomInput)
+        content.addView(roomLayout)
+
+        val scroll = ScrollView(this).apply { addView(content) }
+        val builder = MaterialAlertDialogBuilder(this)
+            .setTitle(if (existing == null) "Adaugă activitate" else "Editează activitatea")
+            .setView(scroll)
+            .setNeutralButton("Anulează", null)
+            .setPositiveButton("Salvează") { _, _ ->
+                val subject = subjectInput.text?.toString()?.trim().orEmpty()
+                if (subject.isBlank()) {
+                    Toast.makeText(this, "Scrie denumirea activității.", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+
+                val intervalMatch = Regex("""(\d{2}):00\s*[–-]\s*(\d{2}):00""")
+                    .find(intervalInput.text.toString())
+                val startHour = intervalMatch?.groupValues?.getOrNull(1)?.toIntOrNull() ?: 8
+                val endHour = intervalMatch?.groupValues?.getOrNull(2)?.toIntOrNull() ?: 10
+                val type = when (typeInput.text.toString()) {
+                    "Curs" -> ActivityType.COURSE
+                    "Laborator" -> ActivityType.LAB
+                    "Seminar" -> ActivityType.SEMINAR
+                    else -> null
+                }
+                val parity = when (parityInput.text.toString()) {
+                    "Impar" -> WeekParity.ODD
+                    "Par" -> WeekParity.EVEN
+                    else -> WeekParity.BOTH
+                }
+
+                UserCustomActivities.upsert(
+                    preferences,
+                    data.series,
+                    group.number,
+                    UserCustomActivities.Entry(
+                        id = existing?.id ?: java.util.UUID.randomUUID().toString(),
+                        subject = subject,
+                        type = type,
+                        day = dayInput.text.toString().takeIf { it in days } ?: "LUNI",
+                        startHour = startHour,
+                        endHour = endHour,
+                        parity = parity,
+                        room = roomInput.text?.toString()?.trim().orEmpty(),
+                    ),
+                )
+                showSavedSchedule(data.series)
+            }
+
+        if (existing != null) {
+            builder.setNegativeButton("Șterge") { _, _ ->
+                UserCustomActivities.delete(preferences, data.series, group.number, existing.id)
+                showSavedSchedule(data.series)
+            }
+        }
+
+        builder.show()
     }
 
     private fun badge(textValue: String, foregroundRes: Int, backgroundRes: Int): TextView {
@@ -1179,6 +1448,13 @@ class MainActivity : AppCompatActivity() {
         val room: TextInputEditText,
     )
 
+    private data class OptionalAllocationEditor(
+        val code: String,
+        val type: ActivityType,
+        val input: AutoCompleteTextView,
+        val candidates: List<OptionalAllocations.Candidate>,
+    )
+
     private data class LoadedSchedule(
         val series: String,
         val sheet: GridSheet,
@@ -1190,6 +1466,7 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val KEY_CURRENT_SERIES = "current_series"
         private const val SUBGROUP_ALL_LABEL = "Nu știu / Arată ambele"
+        private const val ALLOCATION_NONE_LABEL = "Nu știu / Nu afișa"
         private const val WEEK_NAVIGATION_RADIUS = 2
     }
 }
