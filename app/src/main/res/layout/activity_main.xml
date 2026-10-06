@@ -508,11 +508,21 @@
                     </LinearLayout>
                 </LinearLayout>
 
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/addCustomActivityButton"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="14dp"
+                    android:text="+ Adaugă activitate"
+                    android:textAllCaps="false"
+                    app:cornerRadius="8dp" />
+
                 <LinearLayout
                     android:id="@+id/scheduleContainer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
+                    android:layout_marginTop="10dp"
                     android:orientation="vertical" />
 
                 <com.google.android.material.card.MaterialCardView
