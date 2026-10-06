@@ -12,6 +12,8 @@ import android.os.Build
 import androidx.core.content.ContextCompat
 import ro.upb.orarreader.CustomOptionalSeminars
 import ro.upb.orarreader.FacultativeSchedules
+import ro.upb.orarreader.OptionalAllocations
+import ro.upb.orarreader.UserCustomActivities
 import ro.upb.orarreader.model.ScheduleActivity
 import ro.upb.orarreader.model.ScheduleSlot
 import ro.upb.orarreader.model.WeekParity
@@ -92,6 +94,18 @@ object ReminderScheduler {
             prefs.getInt("subgroup_${series}_${group.number}", 0).coerceIn(0, group.subgroupCount)
         }
         val parsedSlots = ScheduleParser.parseForGroup(sheet, group, optionals, catalog)
+        val selectedOptionalAllocations = OptionalAllocations.selectedSlots(
+            prefs,
+            series,
+            optionals,
+            sheet,
+            catalog,
+        )
+        val userCustomActivities = UserCustomActivities.slots(
+            prefs,
+            series,
+            group.number,
+        )
         val manualActivityTypes = OptionalScheduleParser.manualActivityTypes(sheet, catalog)
         val customOptionalActivities = CustomOptionalSeminars.slots(
             prefs,
@@ -105,8 +119,14 @@ object ReminderScheduler {
             FacultativeSchedules.psychologyCourseSlots(prefs, series, facultativeInfo) +
                 FacultativeSchedules.manualSlots(prefs, series, facultativeInfo)
         val mergedSlots = CustomOptionalSeminars.mergeSlots(
-            CustomOptionalSeminars.mergeSlots(parsedSlots, customOptionalActivities),
-            facultativeActivities,
+            CustomOptionalSeminars.mergeSlots(
+                CustomOptionalSeminars.mergeSlots(
+                    CustomOptionalSeminars.mergeSlots(parsedSlots, customOptionalActivities),
+                    selectedOptionalAllocations,
+                ),
+                facultativeActivities,
+            ),
+            userCustomActivities,
         )
         val slots = filterSlotsForSubgroup(mergedSlots, subgroup)
 
